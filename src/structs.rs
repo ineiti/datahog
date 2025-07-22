@@ -41,9 +41,6 @@ pub struct Transaction {
 /// [Argument]s allow the [Node] to hold changeable data to be used by the
 /// [NodeKind], or the [Node::data].
 ///
-/// The [Node::validity] holds a record of the time-span(s) this [Node] is
-/// valid.
-///
 /// Finally, the [Node::history] is a filtered list of all [Transaction]s
 /// used to build this [Node] version.
 #[derive(VersionedSerde, Clone, PartialEq, Debug)]
@@ -63,22 +60,20 @@ pub struct Node {
     edges: HashMap<EdgeID, Edge>,
     /// Arguments used in this node, can be used in Node.data or by the implementation.
     arguments: HashMap<String, Argument>,
-    /// Validity of this [Node]. There can be multiple spans of validity, while a [Node]
-    /// is valid or not valid.
-    validity: HashMap<ValidID, Validity>,
     /// The full history of this node
     history: Vec<RecordEvent>,
 }
 
 /// An [Edge] is a connection between two or more [Node]s.
-/// As with [Node]s, each [Edge] can have zero or more [Validity]s.
+///
+/// TODO: does an [Edge] need a label / description, potentially pointing
+/// to a third [Node]?
 #[derive(VersionedSerde, Clone, PartialEq, Debug)]
 pub struct Edge {
     /// What type of [Edge] this is.
     kind: EdgeKind,
-    /// Validity of this [Edge]. There can be multiple spans of validity, while an [Edge]
-    /// is valid or not valid.
-    validity: HashMap<ValidID, Validity>,
+    /// Validity of this [Edge].
+    validity: Validity,
     /// The full history of this [Edge].
     history: Vec<RecordEvent>,
 }
@@ -152,22 +147,29 @@ pub enum Argument {
 }
 
 /// One entry in a transaction, representing actions on a single
-/// [Node], [Edge], or [Validity].
+/// [Node] or [Edge].
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub enum Record {
-    Node(RecordCUD<NodeID, (NodeKind, OpVersion), NodeAction>),
+    /// A [Node] entry with its [NodeID], the `Create` type, and the `Action` type.
+    Node(RecordCUD<NodeID, (NodeKind, OpVersion), NodeUpdate>),
+    /// An [Edge] entry with its [EdgeID], the `Create` type, and the `Action` type.
     Edge(RecordCUD<EdgeID, EdgeKind, EdgeAction>),
-    Validity(RecordCUD<ValidID, Validity, Validity>),
 }
 
+/// A common structure for Node- and Edge- ID, creation, and update.
+/// An element can be `Create`d and `Update`d at the same time.
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
-pub struct RecordCUD<ID, Create, Action> {
+pub struct RecordCUD<ID, Create, Update> {
+    /// The ID of the element, should be globally unique.
     id: ID,
+    /// How to create the element.
     create: Option<Create>,
-    actions: Vec<Action>,
+    /// Updating the element.
+    updates: Vec<Update>,
 }
 
-/// TODO: Can this be represented as an [Edge]?
+/// The validity of an [Edge]. If a [Node] has multiple validity
+/// periods, then it must have one [Edge] per period.
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub enum Validity {
     From(Timestamp),
@@ -175,26 +177,30 @@ pub enum Validity {
     Period(Timestamp, Timestamp),
 }
 
+/// Elements of a [Node] to update.
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
-pub enum NodeAction {
+pub enum NodeUpdate {
     Label(String),
     Data(Bytes),
-    AddValidity(ValidID),
-    RemoveValidity(ValidID),
     SetArgument(String, Argument),
     RemoveArgument(String),
-    Migrate(OpVersion, Vec<NodeAction>),
+    Migrate(OpVersion, Vec<NodeUpdate>),
     Delete,
 }
 
+/// Elements of an [Edge] to update.
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub enum EdgeAction {
-    AddValidity(ValidID),
-    RemoveValidity(ValidID),
-    Update(EdgeKind),
+    /// The length of the [Vec<NodeID>] must be at least 2, else it's an invalid
+    /// action.
+    UpdateIDs(Vec<NodeID>),
+    /// Updating the [Validity].
+    Validity(Validity),
+    /// Deleting this [Edge].
     Delete,
 }
 
+/// The different kinds of [Edge]s available.
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub enum EdgeKind {
     /// This type of [Edge] connects two or more [Node]s together.
@@ -209,19 +215,50 @@ pub enum EdgeKind {
     Using { client: NodeID, object: NodeID },
 }
 
+/// The ID of a [Node] - should be globally unique.
 #[derive(AsU256, Deserialize, Serialize, Clone, PartialEq, Eq, Hash)]
 pub struct NodeID(U256);
 
+/// The ID of an [Edge] - should be globally unique.
 #[derive(AsU256, Deserialize, Serialize, Clone, PartialEq, Eq, Hash)]
 pub struct EdgeID(U256);
 
+/// The ID of a [Source] - should be globally unique.
 #[derive(AsU256, Deserialize, Serialize, Clone, PartialEq, Eq, Hash)]
-pub struct ValidID(U256);
+pub struct SourceID(U256);
+
+/// What this source can do.
+#[derive(Clone, Debug)]
+pub struct SourceCapabilities {
+    pub id: SourceID,
+    pub can_fetch: bool,
+    pub can_create: bool,
+    pub can_update: bool,
+    pub can_search: bool,
+}
+
+/// A [Source] of [Node]s and [Edge]s.
+#[async_trait::async_trait]
+pub trait Source: std::fmt::Debug {
+    async fn capabilities(&self) -> anyhow::Result<SourceCapabilities>;
+
+    async fn fetch_new(&mut self, since: Timestamp) -> anyhow::Result<Vec<Transaction>>;
+
+    async fn create(&mut self, nodes: Vec<Node>, edges: Vec<Edge>) -> anyhow::Result<()>;
+
+    async fn update(&mut self, nodes: Vec<Node>, edges: Vec<Edge>) -> anyhow::Result<()>;
+
+    async fn search(&mut self, term: String) -> anyhow::Result<()>;
+}
 
 /// Timestamp is in nanoseconds since the UNIX Epoch. This allows
 /// for easy conversion to methods using the UNIX Epoch, as well as
 /// going back to the beginning of the universe, but not close to the
 /// heat death of it.
+/// To allow for planck time (5*10**-45 s) resolution until the (premature) heat death of the universe
+/// in 10**90 years, this would be 512 bits, which seems a bit excessive.
 pub type Timestamp = i128;
 
+/// How to operate on this node, if there are multiple versions of this
+/// node kind.
 pub type OpVersion = u32;

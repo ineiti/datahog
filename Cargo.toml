@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.98"
+async-trait = "0.1.88"
 bytes = { version = "1.10.1", features = ["serde"] }
 flarch = "0.9.2"
 flmacro = "0.9.2"
