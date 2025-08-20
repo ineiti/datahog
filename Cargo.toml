@@ -14,3 +14,4 @@ num-bigint = { version = "0.4.6", features = ["rand", "serde"] }
 rand = { version = "0.9.1", features = ["serde"] }
 serde = "1.0.219"
 sha2 = "0.10.9"
+tokio = {version = "1.45.0", features = ["full"] }

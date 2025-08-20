@@ -537,6 +537,7 @@ dependencies = [
  "rand 0.9.1",
  "serde",
  "sha2",
+ "tokio",
 ]
 
 [[package]]

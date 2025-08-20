@@ -1,32 +1,52 @@
 use std::collections::HashMap;
 
+use tokio::sync::mpsc::{Receiver, Sender, channel};
+
 use crate::structs::{
     Edge, EdgeID, Node, NodeID, Record, Source, SourceCapabilities, SourceID, Timestamp,
     Transaction,
 };
 
-pub mod imap;
 pub mod disk;
+pub mod imap;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct WorldView {
     transactions: Vec<Transaction>,
     nodes: HashMap<NodeID, Node>,
     edges: HashMap<EdgeID, Edge>,
     source_capabilities: HashMap<SourceID, SourceCapabilities>,
+    source_store: HashMap<SourceID, Sender<Transaction>>,
+    source_update: HashMap<SourceID, Receiver<Transaction>>,
     sources: HashMap<SourceID, Box<dyn Source>>,
+    source_tx: Sender<Box<dyn Source>>,
 }
 
 impl WorldView {
     pub fn new() -> Self {
-        Self::default()
+        let (tx, rx) = channel(10);
+        let wv = Self {
+            transactions: vec![],
+            nodes: HashMap::new(),
+            edges: HashMap::new(),
+            source_capabilities: HashMap::new(),
+            source_store: HashMap::new(),
+            source_update: HashMap::new(),
+            sources: HashMap::new(),
+            source_tx: tx,
+        };
+
+
+
+        wv
     }
 
     pub async fn add_source(&mut self, mut source: Box<dyn Source>) -> anyhow::Result<()> {
         let cap = source.capabilities().await?;
-        if cap.can_fetch {
-            self.add_transactions(cap.id.clone(), source.fetch_new(0).await?);
-        }
+        let (tx, rx) = channel(10);
+        let update = source.subscribe(rx).await?;
+        self.source_store.insert(cap.id.clone(), tx);
+        self.source_update.insert(cap.id.clone(), update);
         self.sources.insert(cap.id.clone(), source);
         self.source_capabilities.insert(cap.id.clone(), cap);
         Ok(())
@@ -48,4 +68,3 @@ impl WorldView {
         }
     }
 }
-

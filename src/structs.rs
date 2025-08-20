@@ -6,6 +6,7 @@ use flmacro::{AsU256, VersionedSerde};
 use num_bigfloat::BigFloat;
 use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
+use tokio::sync::mpsc::Receiver;
 
 /// A [Transaction] is the fundamental storage entity in `DataHog`.
 /// All [Transaction]s must be read in order to get the current state
@@ -242,13 +243,10 @@ pub struct SourceCapabilities {
 pub trait Source: std::fmt::Debug {
     async fn capabilities(&self) -> anyhow::Result<SourceCapabilities>;
 
-    async fn fetch_new(&mut self, since: Timestamp) -> anyhow::Result<Vec<Transaction>>;
-
-    async fn create(&mut self, nodes: Vec<Node>, edges: Vec<Edge>) -> anyhow::Result<()>;
-
-    async fn update(&mut self, nodes: Vec<Node>, edges: Vec<Edge>) -> anyhow::Result<()>;
-
-    async fn search(&mut self, term: String) -> anyhow::Result<()>;
+    async fn subscribe(
+        &mut self,
+        store: Receiver<Transaction>,
+    ) -> anyhow::Result<Receiver<Transaction>>;
 }
 
 /// Timestamp is in nanoseconds since the UNIX Epoch. This allows
