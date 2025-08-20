@@ -1,0 +1,11 @@
+<div class="container" style="height: 100%; display: flex; flex-direction: column;">
+    <h1>Network Graph</h1>
+    <div style="flex: 1; overflow: hidden;">
+        <app-network-graph [nodes]="nodes" [edges]="edges" [options]="options">
+        </app-network-graph>
+    </div>
+    <div>
+        <!-- <button (click)="addNode()">Add Node</button> -->
+        <button (click)="fitNetwork()">Fit View</button>
+    </div>
+</div>

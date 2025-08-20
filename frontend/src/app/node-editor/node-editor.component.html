@@ -1,0 +1,33 @@
+<h2 mat-dialog-title>Edit Node</h2>
+<mat-dialog-content>
+    Node ID: {{data.id}}<br>
+    <mat-form-field>
+        <mat-label>Node Label</mat-label>
+        <input matInput [(ngModel)]="label" cdkFocusInitial #labelInput />
+    </mat-form-field>
+
+    <div *ngIf="dataView !== undefined">
+        <div style="display: flex;">
+            <mat-form-field style="flex: 1; margin-right: 1em;">
+                <mat-label>Title</mat-label>
+                <input matInput [(ngModel)]="dataView!.title" />
+            </mat-form-field>
+            <mat-form-field style="flex: 1;">
+                <mat-label>View Type</mat-label>
+                <mat-select [(ngModel)]="dataView!.viewType">
+                    <mat-option *ngFor="let type of ['graph', 'board', 'list', 'markdown']" [value]="type">{{ type
+                        }}</mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <mat-form-field style="width: 100%;">
+            <mat-label>Root Node</mat-label>
+            <input matInput [(ngModel)]="dataView!.rootNode" />
+        </mat-form-field>
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions>
+    <button mat-button mat-dialog-close>Cancel</button>
+    <button mat-button (click)="update()">Update</button>
+</mat-dialog-actions>
