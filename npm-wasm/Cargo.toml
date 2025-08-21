@@ -1,0 +1,39 @@
+[package]
+name = "datahog-npm"
+version = "0.1.0"
+authors = ["Linus Gasser <linus.gasser@epfl.ch>"]
+edition = "2021"
+description = "Interface to datahog"
+repository = "https://github.com/c4dt/datahog"
+license = "AGPLv3"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+lto = true
+opt-level = 's'
+
+[features]
+
+[dependencies]
+#datahog = { path = "../datahog" }
+
+anyhow = "1"
+console_error_panic_hook = "0.1"
+js-sys = "0.3"
+log = "0.4"
+tokio = "1"
+urlencoding = "2"
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
+wasm-bindgen-futures = "0.4"
+wasm-logger = "0.2"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+

@@ -20,12 +20,14 @@
   "shell": {
     "init_hook": [
       "if [ -z \"$( find $RUSTUP_HOME | grep toolchains/stable )\" ]; then rustup default stable; fi",
-      "alias ls='ls --color'"
+      "alias ls='ls --color'",
+      "PATH=$PATH:$PWD/frontend/node_modules/.bin"
     ],
     "scripts": {
     }
   },
   "env": {
-    "LS_COLORS": "di=33"
+    "LS_COLORS": "di=33",
+    "SOME": "123"
   }
 }

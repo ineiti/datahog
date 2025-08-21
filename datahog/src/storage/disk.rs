@@ -10,9 +10,10 @@ impl Source for SourceDisk {
     async fn capabilities(&self) -> anyhow::Result<SourceCapabilities> {
         todo!()
     }
+    
     async fn subscribe(
         &mut self,
-        store: Receiver<Transaction>,
+        _store: Receiver<Transaction>,
     ) -> anyhow::Result<Receiver<Transaction>> {
         todo!()
     }

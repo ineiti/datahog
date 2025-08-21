@@ -13,7 +13,7 @@ use tokio::sync::mpsc::Receiver;
 /// of the [Node]s and [Edge]s.
 /// TODO: Speed-up by creating snapshots of the [Node]s and [Edge]s
 /// at specific timestamps.
-#[derive(VersionedSerde, Clone, PartialEq, Debug)]
+#[derive(VersionedSerde, Clone, PartialEq, Eq, Debug)]
 pub struct Transaction {
     /// Time of registration.
     pub timestamp: Timestamp,
@@ -44,7 +44,7 @@ pub struct Transaction {
 ///
 /// Finally, the [Node::history] is a filtered list of all [Transaction]s
 /// used to build this [Node] version.
-#[derive(VersionedSerde, Clone, PartialEq, Debug)]
+#[derive(VersionedSerde, Clone, PartialEq, Eq, Debug)]
 pub struct Node {
     /// What functionality this node has - can never be changed
     kind: NodeKind,
@@ -69,7 +69,7 @@ pub struct Node {
 ///
 /// TODO: does an [Edge] need a label / description, potentially pointing
 /// to a third [Node]?
-#[derive(VersionedSerde, Clone, PartialEq, Debug)]
+#[derive(VersionedSerde, Clone, PartialEq, Eq, Debug)]
 pub struct Edge {
     /// What type of [Edge] this is.
     kind: EdgeKind,
@@ -80,14 +80,14 @@ pub struct Edge {
 }
 
 /// A [RecordEvent] is a filtered [Vec<Record>] where only one [ID] is represented.
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct RecordEvent(Timestamp, Record);
 
 /// These are the main [Node] types defined in the system.
 /// Still working out which are the basic types.
 /// If there are too many, new types will have to be added too often.
 /// If there are too few, it will be difficult to use them in all circumstances.
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum NodeKind {
     /// Nodes to render data - either on screen or disk
     Render(BFRender),
@@ -102,7 +102,7 @@ pub enum NodeKind {
 /// renderer might come at a later moment.
 /// TODO: define which [Node]s are displayed for each of the
 /// Renderers.
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum BFRender {
     /// This renderer interprets the [Node::data] as an md file
     /// and includes also other [Node]s linked to it.
@@ -120,7 +120,7 @@ pub enum BFRender {
 /// point to common data.
 /// TODO: which data is stored in which place? There are the [Node::data],
 /// [Node::arguments], and the [NodeKind::Container].
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum BFContainer {
     /// ???
     Formatted,
@@ -134,7 +134,7 @@ pub enum BFContainer {
 }
 
 /// An argument to a [Node] which is used in its [Node::data] field.
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum Argument {
     /// Points to another [Node]
     /// TODO: why isn't this an [Edge]?
@@ -149,7 +149,7 @@ pub enum Argument {
 
 /// One entry in a transaction, representing actions on a single
 /// [Node] or [Edge].
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum Record {
     /// A [Node] entry with its [NodeID], the `Create` type, and the `Action` type.
     Node(RecordCUD<NodeID, (NodeKind, OpVersion), NodeUpdate>),
@@ -159,7 +159,7 @@ pub enum Record {
 
 /// A common structure for Node- and Edge- ID, creation, and update.
 /// An element can be `Create`d and `Update`d at the same time.
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct RecordCUD<ID, Create, Update> {
     /// The ID of the element, should be globally unique.
     id: ID,
@@ -171,7 +171,7 @@ pub struct RecordCUD<ID, Create, Update> {
 
 /// The validity of an [Edge]. If a [Node] has multiple validity
 /// periods, then it must have one [Edge] per period.
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum Validity {
     From(Timestamp),
     To(Timestamp),
@@ -179,7 +179,7 @@ pub enum Validity {
 }
 
 /// Elements of a [Node] to update.
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum NodeUpdate {
     Label(String),
     Data(Bytes),
@@ -190,7 +190,7 @@ pub enum NodeUpdate {
 }
 
 /// Elements of an [Edge] to update.
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum EdgeAction {
     /// The length of the [Vec<NodeID>] must be at least 2, else it's an invalid
     /// action.
@@ -202,7 +202,7 @@ pub enum EdgeAction {
 }
 
 /// The different kinds of [Edge]s available.
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum EdgeKind {
     /// This type of [Edge] connects two or more [Node]s together.
     /// These [Node]s are supposed to be very similar in one sense or another.

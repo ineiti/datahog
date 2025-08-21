@@ -1,0 +1,19 @@
+[package]
+name = "backend"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+datahog = { path = "../datahog" }
+
+hex = "0.4"
+log = "0.4"
+primitive-types = {version="0.13", features = ["serde"]}
+rand = "0.8"
+rocket = {version="0.5", features=["serde_json", "json"]}
+serde_json = "1"
+sha2 = "0.10"
+sled = "0.34"
+tempfile = "3"

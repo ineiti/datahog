@@ -12,7 +12,7 @@ impl Source for SourceIMAP {
     }
     async fn subscribe(
         &mut self,
-        store: Receiver<Transaction>,
+        _store: Receiver<Transaction>,
     ) -> anyhow::Result<Receiver<Transaction>> {
         todo!()
     }
