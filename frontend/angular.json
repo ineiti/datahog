@@ -25,6 +25,10 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               {
+                "glob": "**/*.wasm",
+                "input": "../npm-wasm/pkg"
+              },
+              {
                 "glob": "**/*",
                 "input": "public"
               }

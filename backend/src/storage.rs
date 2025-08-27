@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use datahog::{storage::WorldView, structs::Transaction};
+use datahog::{worldview::WorldView, structs::Transaction};
 use rocket::{
     response::status::BadRequest,
     serde::{Deserialize, Serialize}, tokio::sync::Mutex,

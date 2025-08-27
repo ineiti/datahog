@@ -17,23 +17,27 @@ opt-level = 's'
 [features]
 
 [dependencies]
-#datahog = { path = "../datahog" }
+datahog = { path = "../datahog" }
 
 anyhow = "1"
 console_error_panic_hook = "0.1"
+getrandom = { version = "0.2", features = ["js"] }
 js-sys = "0.3"
 log = "0.4"
 tokio = "1"
 urlencoding = "2"
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
+wasm-bindgen-test = "*"
 wasm-bindgen-futures = "0.4"
 wasm-logger = "0.2"
 
+[dependencies.flarch]
+version = "0.9"
+features = ["node"]
+
 [dependencies.web-sys]
 version = "0.3"
-features = [
-]
+features = []
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
-

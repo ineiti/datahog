@@ -47,7 +47,7 @@ async fn catchall() -> Option<NamedFile> {
 async fn rocket() -> Rocket<Build> {
     let rb = rocket::build()
         .attach(CORS)
-        .mount("/api/v2", routes![updates, updates_options, reset,])
+        .mount("/api/v1", routes![updates, updates_options, reset,])
         .manage(Storage::new());
 
     if let Ok(web) = env::var("STATIC_PAGE") {

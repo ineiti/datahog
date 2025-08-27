@@ -1,19 +1,28 @@
+use datahog::worldview::WorldView;
 use wasm_bindgen::prelude::*;
 
-pub fn factorial(num: u128) -> u128 {
-    match num {
-        0 => 1,
-        1 => 1,
-        _ => factorial(num - 1) * num,
+#[wasm_bindgen]
+pub struct Datahog {
+    wv: WorldView,
+    count: i32,
+}
+
+#[wasm_bindgen]
+impl Datahog {
+    pub fn new() -> Self {
+        Self {
+            wv: WorldView::new(),
+            count: 10,
+        }
+    }
+
+    pub fn increase(&mut self) -> i32 {
+        self.count += 1;
+        self.count
     }
 }
 
-
 #[wasm_bindgen]
-pub fn get_factorial(num: u8) -> String {
-    let mut f: u128 = 0;
-    for _ in 0..10000000 {
-      f = factorial(num as u128); 
-    }
-    f.to_string()
+pub fn new_dh() -> Datahog {
+    Datahog::new()
 }

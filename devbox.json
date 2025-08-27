@@ -1,20 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.10.7/.schema/devbox.schema.json",
   "packages": {
-    "which":    "latest",
-    "rustup":   "latest",
+    "which": "latest",
+    "rustup": "latest",
     "libiconv": "latest",
-    "darwin.apple_sdk.frameworks.CoreServices": {
-      "platforms": ["x86_64-darwin", "aarch64-darwin"]
-    },
-    "darwin.apple_sdk.frameworks.SystemConfiguration": {
-      "platforms": ["x86_64-darwin", "aarch64-darwin"]
-    },
-    "darwin.apple_sdk.frameworks.Security": {
-      "platforms": ["x86_64-darwin", "aarch64-darwin"]
-    },
-    "wasm-pack":   "latest",
-    "nodejs":      "22",
+    "wasm-pack": "latest",
+    "nodejs": "22",
     "cargo-udeps": "latest"
   },
   "shell": {
@@ -23,8 +14,7 @@
       "alias ls='ls --color'",
       "PATH=$PATH:$PWD/frontend/node_modules/.bin"
     ],
-    "scripts": {
-    }
+    "scripts": {}
   },
   "env": {
     "LS_COLORS": "di=33",

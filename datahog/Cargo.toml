@@ -7,11 +7,11 @@ edition = "2024"
 anyhow = "1"
 async-trait = "0.1"
 bytes = { version = "1", features = ["serde"] }
-flarch = "0.9"
+flarch = { version = "0.9", features = ["node"] }
 flmacro = "0.9"
 num-bigfloat = { version = "1", features = ["rand", "serde"] }
 num-bigint = { version = "0.4", features = ["rand", "serde"] }
-rand = { version = "0.9", features = ["serde"] }
+rand = { version = "0.8", features = ["serde"] }
 serde = "1.0"
 sha2 = "0.10"
-tokio = {version = "1", features = ["full"] }
+tokio = { version = "1", features = [] }

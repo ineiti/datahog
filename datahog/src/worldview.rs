@@ -7,9 +7,6 @@ use crate::structs::{
     Transaction,
 };
 
-pub mod disk;
-pub mod imap;
-
 #[derive(Debug)]
 pub struct WorldView {
     _transactions: Vec<Transaction>,

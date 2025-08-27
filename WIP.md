@@ -11,13 +11,26 @@
 
 # History
 
+## 2025-08-27
+
+### wasm-pack
+
+- compile datahog to npm-wasm
+- use npm-wasm in frontend
+- TODO:
+  - fix bug of `readonly __wbgt__flarch::tasks::wasm::test_interval: (a: number) => void;`
+    created by `wasm-pack build --target web`
+    - remove the test from flarch?
+  - why do we need to call `init(new URL...)`, and the wasm-file is not put in the 
+    angular/vite directory?
+  - make sure files are correctly distributed in datahog/backend/npm-wasm
+  - make the storage working
+  - think how `WorldView` should look to make it usable both for the frontend and the backend
+    - is it needed on the backend?
+
 ## 2025-08-21
 
 ### Backend / wasm / frontend
 
 - Creating structure with common code, backend, wasm-library, and angular
 - Last action: created default angular app
-- Next steps: 
-  - make sure files are correctly distributed in datahog/backend/npm-wasm
-  - compile datahog to npm-wasm
-  - use npm-wasm in frontend
