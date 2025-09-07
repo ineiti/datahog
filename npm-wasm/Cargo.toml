@@ -20,6 +20,7 @@ opt-level = 's'
 datahog = { path = "../datahog" }
 
 anyhow = "1"
+async-trait = "0.1"
 console_error_panic_hook = "0.1"
 getrandom = { version = "0.2", features = ["js"] }
 js-sys = "0.3"
@@ -32,8 +33,9 @@ wasm-bindgen-futures = "0.4"
 wasm-logger = "0.2"
 
 [dependencies.flarch]
+path = "../../../ineiti/fledger/flarch"
 version = "0.9"
-features = ["node"]
+# features = ["node"]
 
 [dependencies.web-sys]
 version = "0.3"
