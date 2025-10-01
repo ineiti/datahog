@@ -46,23 +46,35 @@ pub struct Transaction {
 /// used to build this [Node] version.
 #[derive(VersionedSerde, Clone, PartialEq, Eq, Debug)]
 pub struct Node {
+    /// The unique identifier of this node
+    pub id: NodeID,
     /// What functionality this node has - can never be changed
-    kind: NodeKind,
+    pub kind: NodeKind,
     /// The label used to display the node on screen
-    label: String,
+    pub label: String,
     /// The version of this node's implementation, which is independant
     /// of the Node-version, handled by [VersionedSerde].
     /// This allows to have evolving interpretations of the edges and arguments
     /// of a Node.
-    op_version: OpVersion,
+    pub op_version: OpVersion,
     /// Data specific to this node
-    data: Bytes,
+    pub data: DataHash,
     /// Edges to other nodes
-    edges: HashMap<EdgeID, Edge>,
+    pub edges: HashMap<EdgeID, Edge>,
     /// Arguments used in this node, can be used in Node.data or by the implementation.
-    arguments: HashMap<String, Argument>,
+    pub arguments: HashMap<String, Argument>,
     /// The full history of this node
-    history: Vec<RecordEvent>,
+    pub history: Vec<RecordEvent>,
+}
+
+/// A [DataHash] represents either the hash of an object, if it is too
+/// big to be stored in memory, or the bytes of the object itself.
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
+pub enum DataHash {
+    /// A sha256 hash of the object.
+    Hash(U256),
+    /// The bytes of the object.
+    Bytes(Bytes),
 }
 
 /// An [Edge] is a connection between two or more [Node]s.
@@ -72,16 +84,16 @@ pub struct Node {
 #[derive(VersionedSerde, Clone, PartialEq, Eq, Debug)]
 pub struct Edge {
     /// What type of [Edge] this is.
-    kind: EdgeKind,
+    pub kind: EdgeKind,
     /// Validity of this [Edge].
-    validity: Validity,
+    pub validity: Validity,
     /// The full history of this [Edge].
-    history: Vec<RecordEvent>,
+    pub history: Vec<RecordEvent>,
 }
 
 /// A [RecordEvent] is a filtered [Vec<Record>] where only one [ID] is represented.
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
-pub struct RecordEvent(Timestamp, Record);
+pub struct RecordEvent(pub Timestamp, pub Record);
 
 /// These are the main [Node] types defined in the system.
 /// Still working out which are the basic types.
@@ -162,11 +174,11 @@ pub enum Record {
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub struct RecordCUD<ID, Create, Update> {
     /// The ID of the element, should be globally unique.
-    id: ID,
+    pub id: ID,
     /// How to create the element.
-    create: Option<Create>,
+    pub create: Option<Create>,
     /// Updating the element.
-    updates: Vec<Update>,
+    pub updates: Vec<Update>,
 }
 
 /// The validity of an [Edge]. If a [Node] has multiple validity

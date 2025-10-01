@@ -11,6 +11,10 @@
 
 # History
 
+## 2025-10-01
+
+- started to implement the datahog/src/storage with a `dir_trait` and a first `disk` implementation
+
 ## 2025-08-27
 
 ### wasm-pack
@@ -21,7 +25,7 @@
   - fix bug of `readonly __wbgt__flarch::tasks::wasm::test_interval: (a: number) => void;`
     created by `wasm-pack build --target web`
     - remove the test from flarch?
-  - why do we need to call `init(new URL...)`, and the wasm-file is not put in the 
+  - why do we need to call `init(new URL...)`, and the wasm-file is not put in the
     angular/vite directory?
   - make sure files are correctly distributed in datahog/backend/npm-wasm
   - make the storage working

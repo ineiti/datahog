@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import init, { Datahog, Transaction } from 'datahog-npm';
 import { Subject } from 'rxjs';
+import { DataHogService } from './data-hog';
 
 @Component({
   selector: 'app-root',
@@ -12,18 +13,20 @@ import { Subject } from 'rxjs';
 export class App {
   protected readonly title = signal('frontend');
 
-  ngOnInit() {
-    const url = new URL('datahog_npm_bg.wasm', import.meta.url);
-    const sub = new Subject();
-    sub.subscribe((s) => {
-      console.log(`Got ${s}`);
-    })
-    init(url).then(() => {
-      Datahog.new().then((dh) => {
-        dh.add_callback((f: Transaction) => {
-          console.log(`Callback called with ${f.timestamp}`);
+  constructor(private dh: DataHogService) { }
+
+  async ngOnInit() {
+    return new Promise((res) => {
+      this.dh.done.subscribe(() => {
+        console.log("Initialized dh");
+        res(true);
+        this.dh.getNode(this.dh.rootNodeID).then((root) => {
+          console.log(`got node ${this.dh.rootNodeID}`);
+          root.subscribe((node) => {
+            console.log(`Updated node ${node}`);
+          })
         })
       })
-    }).catch((e) => { console.error(e); })
+    })
   }
 }

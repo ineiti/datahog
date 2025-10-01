@@ -1,17 +1,20 @@
+/// The [WorldView] is responsible for managing the data from multiple [Source]s,
+/// ensuring that the data is consistent and up-to-date. It provides a single
+/// interface for accessing and manipulating the data, making it easy to work
+/// with the data from different sources.
 use std::collections::HashMap;
 
 use tokio::sync::mpsc::{Receiver, Sender, channel};
 
 use crate::structs::{
-    Edge, EdgeID, Node, NodeID, Record, Source, SourceCapabilities, SourceID,
-    Transaction,
+    Edge, EdgeID, Node, NodeID, Record, Source, SourceCapabilities, SourceID, Transaction,
 };
 
 #[derive(Debug)]
 pub struct WorldView {
-    _transactions: Vec<Transaction>,
-    _nodes: HashMap<NodeID, Node>,
-    _edges: HashMap<EdgeID, Edge>,
+    transactions: Vec<Transaction>,
+    nodes: HashMap<NodeID, Node>,
+    edges: HashMap<EdgeID, Edge>,
     source_capabilities: HashMap<SourceID, SourceCapabilities>,
     source_store: HashMap<SourceID, Sender<Transaction>>,
     source_update: HashMap<SourceID, Receiver<Transaction>>,
@@ -23,9 +26,9 @@ impl WorldView {
     pub fn new() -> Self {
         // let (tx, rx) = channel(10);
         let wv = Self {
-            _transactions: vec![],
-            _nodes: HashMap::new(),
-            _edges: HashMap::new(),
+            transactions: vec![],
+            nodes: HashMap::new(),
+            edges: HashMap::new(),
             source_capabilities: HashMap::new(),
             source_store: HashMap::new(),
             source_update: HashMap::new(),
@@ -47,19 +50,45 @@ impl WorldView {
         Ok(())
     }
 
-    pub async fn fetch(&mut self) -> anyhow::Result<()> {
-        todo!()
-    }
-
-    pub fn add_transactions(&mut self, _source: SourceID, txs: Vec<Transaction>) {
-        for tx in txs {
-            // let ts = tx.timestamp;
-            for r in tx.records {
-                match r {
-                    Record::Node(_record_cud) => todo!(),
-                    Record::Edge(_record_cud) => todo!(),
-                }
+    pub async fn fetch(&mut self) -> anyhow::Result<(Vec<Transaction>, Vec<NodeID>, Vec<EdgeID>)> {
+        let mut txs = vec![];
+        for source in &mut self.source_update {
+            while let Ok(tx) = source.1.try_recv() {
+                txs.push(tx);
             }
         }
+        let (mut nodes, mut edges) = (vec![], vec![]);
+        for tx in &txs {
+            let (mut ns, mut es) = self.do_tx(tx.clone());
+            nodes.append(&mut ns);
+            edges.append(&mut es);
+        }
+        Ok((txs, nodes, edges))
+    }
+
+    fn do_tx(&mut self, tx: Transaction) -> (Vec<NodeID>, Vec<EdgeID>) {
+        let (mut nids, mut eids) = (vec![], vec![]);
+        for r in &tx.records {
+            match r {
+                Record::Node(rc) => nids.push(rc.id.clone()),
+                Record::Edge(rc) => eids.push(rc.id.clone()),
+            }
+        }
+        self.transactions.push(tx);
+        (nids, eids)
+    }
+
+    pub fn add_transactions(&mut self, _source: &SourceID, txs: Vec<Transaction>) {
+        for tx in txs {
+            self.do_tx(tx);
+        }
+    }
+
+    pub fn get_node(&self, id: &NodeID) -> Option<Node> {
+        self.nodes.get(id).cloned()
+    }
+
+    pub fn get_edge(&self, id: &EdgeID) -> Option<Edge> {
+        self.edges.get(id).cloned()
     }
 }
