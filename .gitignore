@@ -21,3 +21,5 @@ build/
 # Binary files
 /target-common
 *.code-workspace
+.aider*
+lmstudio.json

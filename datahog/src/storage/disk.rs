@@ -1,4 +1,8 @@
-/// This source reads data from disk and crates a graph.
+use std::collections::HashMap;
+
+use async_recursion::async_recursion;
+use either::Either;
+/// This source reads data from disk and creates a graph.
 /// V0 does the following:
 /// - reads md files as a graph
 ///   - interpreting titles and sub-titles as nodes and edges
@@ -13,7 +17,10 @@ use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::{
     storage::dir_trait::{DirectoryEntry, Reader, Writer},
-    structs::{Source, SourceCapabilities, SourceID, Transaction},
+    structs::{
+        BFContainer, BFRender, DataHash, Edge, EdgeID, EdgeKind, Node, NodeID, NodeKind, Record,
+        RecordCUD, Source, SourceCapabilities, SourceID, Transaction, Validity,
+    },
 };
 
 #[derive(Debug)]
@@ -22,8 +29,6 @@ where
     RW: Reader + Writer + std::fmt::Debug + Sync + Send,
 {
     disk: RW,
-    sender: Sender<Transaction>,
-    disk_txs: Receiver<Transaction>,
 }
 
 #[async_trait::async_trait]
@@ -33,7 +38,6 @@ impl<RW: Reader + Writer + std::fmt::Debug + Sync + Send> Source for SourceDisk<
             id: SourceID::rnd(),
             auto_fetch: true,
             accepts_txs: false,
-            can_update: false,
             can_search: false,
         })
     }
@@ -42,29 +46,45 @@ impl<RW: Reader + Writer + std::fmt::Debug + Sync + Send> Source for SourceDisk<
         &mut self,
         _store: Receiver<Transaction>,
     ) -> anyhow::Result<Receiver<Transaction>> {
-        for entry in self.disk.read_directory(&[]).await? {
-            self.read_dir(entry).await?;
+        let (sender, disk_txs) = tokio::sync::mpsc::channel(100);
+        // Start with root directory (empty path) and a labelled parent node.
+        let root = Node::label("root");
+        for tx in self.read_dir(&root, &[]).await? {
+            sender.send(tx).await?;
         }
-        Ok(rx)
+        Ok(disk_txs)
     }
 }
 
 impl<RW: Reader + Writer + std::fmt::Debug + Sync + Send> SourceDisk<RW> {
     pub fn new(disk: RW) -> Self {
-        let (sender, disk_txs) = tokio::sync::mpsc::channel(100);
-        Self {
-            disk,
-            sender,
-            disk_txs,
-        }
+        Self { disk }
     }
 
-    async fn read_dir(&mut self, entry: DirectoryEntry) -> anyhow::Result<()> {
-        match entry {
-            DirectoryEntry::Directory(_) => todo!(),
-            DirectoryEntry::File(_) => todo!(),
-        }
+    async fn read_dir(
+        &mut self,
+        parent: &Node,
+        path: &[&str],
+    ) -> anyhow::Result<Vec<Transaction>> {
         Ok(())
+    }
+
+    async fn process_markdown(
+        &mut self,
+        parent: &Node,
+        file_name: &str,
+        content: &str,
+    ) -> anyhow::Result<Vec<Transaction>> {
+        // Use markdown_ppp parser to process markdown content
+        Ok(vec![])
+    }
+
+    async fn process_file(
+        &mut self,
+        file_name: &str,
+        content: &str,,
+    ) -> anyhow::Result<Vec<Transaction>> {
+        Ok(vec![])
     }
 }
 

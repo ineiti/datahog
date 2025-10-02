@@ -1,10 +1,40 @@
+use std::{collections::HashMap, f64::consts::E};
+
+use bytes::Bytes;
 use either::Either;
 
 use crate::structs::{
-    DataHash, Edge, EdgeAction, EdgeID, HasID, Node, NodeID, NodeUpdate, RecordCUD,
+    BFContainer, DataHash, Edge, EdgeAction, EdgeID, EdgeKind, HasID, Node, NodeID, NodeKind,
+    NodeUpdate, Record, RecordCUD, Timestamp, Transaction, Validity,
 };
 
 impl Node {
+    pub fn label(label: &str) -> Self {
+        Self {
+            id: NodeID::rnd(),
+            label: label.to_string(),
+            data: DataHash::Bytes(Bytes::new()),
+            arguments: Default::default(),
+            op_version: 0,
+            kind: NodeKind::Label,
+            edges: HashMap::new(),
+            history: vec![],
+        }
+    }
+
+    pub fn container(container: BFContainer) -> Self {
+        Self {
+            id: NodeID::rnd(),
+            label: "container".to_string(),
+            data: DataHash::Bytes(Bytes::new()),
+            arguments: Default::default(),
+            op_version: 0,
+            kind: NodeKind::Container(container),
+            edges: HashMap::new(),
+            history: vec![],
+        }
+    }
+
     pub fn update(&mut self, update: NodeUpdate) {
         match update {
             NodeUpdate::Label(l) => self.label = l,
@@ -39,7 +69,51 @@ impl HasID<EdgeID> for Edge {
 }
 
 impl Edge {
-    pub fn update(&mut self, update: EdgeAction) {}
+    pub fn contains(container: NodeID, object: NodeID) -> Self {
+        Self {
+            id: EdgeID::rnd(),
+            kind: EdgeKind::Contains { container, object },
+            history: vec![],
+            validity: Validity::from_now(),
+        }
+    }
+
+    pub fn update(&mut self, _update: EdgeAction) {}
+}
+
+impl Validity {
+    pub fn from_now() -> Self {
+        Validity::From(timestamp_now())
+    }
+}
+
+impl Transaction {
+    pub fn create_node(node: Node) -> Self {
+        Self {
+            timestamp: timestamp_now(),
+            records: vec![Record::Node(RecordCUD {
+                base: Either::Right(node),
+                updates: vec![],
+            })],
+        }
+    }
+
+    pub fn create_edge(edge: Edge) -> Self {
+        Self {
+            timestamp: timestamp_now(),
+            records: vec![Record::Edge(RecordCUD {
+                base: Either::Right(edge),
+                updates: vec![],
+            })],
+        }
+    }
+}
+
+pub fn timestamp_now() -> Timestamp {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_nanos() as Timestamp
 }
 
 impl<ID, Create, Update> RecordCUD<ID, Create, Update>

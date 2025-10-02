@@ -230,6 +230,8 @@ pub enum EdgeKind {
     Definition { object: NodeID, label: NodeID },
     /// A using edge connects a [Node] as a _client_ to a [Node] as an _object_.
     Using { client: NodeID, object: NodeID },
+    /// A contains edge connects a [Node] as a _container_ to a [Node] as an _object_.
+    Contains { container: NodeID, object: NodeID },
 }
 
 /// The ID of a [Node] - should be globally unique.
