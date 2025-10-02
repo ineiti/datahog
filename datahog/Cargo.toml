@@ -7,10 +7,12 @@ edition = "2024"
 anyhow = "1"
 async-trait = "0.1"
 bytes = { version = "1", features = ["serde"] }
+either = {version = "1.15.0", features = ["serde"]}
 # flarch = { version = "0.9", features = ["node"] }
 # flarch = { version = "0.9", features = ["node"] }
 flarch = { version = "0.9", path="../../../ineiti/fledger/flarch" }
 flmacro = "0.9"
+log = "0.4.28"
 num-bigfloat = { version = "1", features = ["rand", "serde"] }
 num-bigint = { version = "0.4", features = ["rand", "serde"] }
 rand = { version = "0.8", features = ["serde"] }

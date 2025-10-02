@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use bytes::Bytes;
+use either::Either;
 use flarch::nodeids::U256;
 use flmacro::{AsU256, VersionedSerde};
 use num_bigfloat::BigFloat;
@@ -83,6 +84,8 @@ pub enum DataHash {
 /// to a third [Node]?
 #[derive(VersionedSerde, Clone, PartialEq, Eq, Debug)]
 pub struct Edge {
+    /// The globally unique identifier for this [Edge].
+    pub id: EdgeID,
     /// What type of [Edge] this is.
     pub kind: EdgeKind,
     /// Validity of this [Edge].
@@ -164,19 +167,20 @@ pub enum Argument {
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum Record {
     /// A [Node] entry with its [NodeID], the `Create` type, and the `Action` type.
-    Node(RecordCUD<NodeID, (NodeKind, OpVersion), NodeUpdate>),
+    Node(RecordCUD<NodeID, Node, NodeUpdate>),
     /// An [Edge] entry with its [EdgeID], the `Create` type, and the `Action` type.
-    Edge(RecordCUD<EdgeID, EdgeKind, EdgeAction>),
+    Edge(RecordCUD<EdgeID, Edge, EdgeAction>),
 }
 
 /// A common structure for Node- and Edge- ID, creation, and update.
 /// An element can be `Create`d and `Update`d at the same time.
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
-pub struct RecordCUD<ID, Create, Update> {
-    /// The ID of the element, should be globally unique.
-    pub id: ID,
-    /// How to create the element.
-    pub create: Option<Create>,
+pub struct RecordCUD<ID, Create, Update>
+where
+    Create: HasID<ID>,
+{
+    /// The ID of the element, must be globally unique, or the `Create` type.
+    pub base: Either<ID, Create>,
     /// Updating the element.
     pub updates: Vec<Update>,
 }
@@ -244,9 +248,8 @@ pub struct SourceID(U256);
 #[derive(Clone, Debug)]
 pub struct SourceCapabilities {
     pub id: SourceID,
-    pub can_fetch: bool,
-    pub can_create: bool,
-    pub can_update: bool,
+    pub auto_fetch: bool,
+    pub accepts_txs: bool,
     pub can_search: bool,
 }
 
@@ -259,6 +262,10 @@ pub trait Source: std::fmt::Debug {
         &mut self,
         store: Receiver<Transaction>,
     ) -> anyhow::Result<Receiver<Transaction>>;
+}
+
+pub trait HasID<T>: std::fmt::Debug {
+    fn id(&self) -> T;
 }
 
 /// Timestamp is in nanoseconds since the UNIX Epoch. This allows
