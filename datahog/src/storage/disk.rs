@@ -83,43 +83,27 @@ impl<RW: Reader + Writer + std::fmt::Debug + Sync + Send> SourceDisk<RW> {
                         transactions.extend(md_txs);
                     } else {
                         // Regular file: create a node with content as data
-                        let file_node = Node::container(BFContainer::MimeType("text/plain".to_string()));
-                        let mut file_node = file_node;
+                        let mut file_node = Node::container(BFContainer::MimeType("text/plain".to_string()));
                         file_node.label = name.to_string();
                         file_node.data = DataHash::Bytes(content.into());
                         
-                        let record = Record::Create(file_node);
-                        transactions.push(Transaction {
-                            timestamp: crate::impls::timestamp_now(),
-                            records: vec![record],
-                        });
+                        transactions.push(Transaction::create_node(file_node));
                         
                         // Create edge from parent to file node
                         let edge = Edge::contains(parent.id, file_node.id);
-                        transactions.push(Transaction {
-                            timestamp: crate::impls::timestamp_now(),
-                            records: vec![Record::Create(edge)],
-                        });
+                        transactions.push(Transaction::create_edge(edge));
                     }
                 },
                 DirectoryEntry::Dir(name) => {
                     // Create node for directory
-                    let dir_node = Node::container(BFContainer::Formatted);
-                    let mut dir_node = dir_node;
+                    let mut dir_node = Node::container(BFContainer::Formatted);
                     dir_node.label = name.to_string();
                     
-                    let record = Record::Create(dir_node);
-                    transactions.push(Transaction {
-                        timestamp: crate::impls::timestamp_now(),
-                        records: vec![record],
-                    });
+                    transactions.push(Transaction::create_node(dir_node));
                     
                     // Create edge from parent to directory node
                     let edge = Edge::contains(parent.id, dir_node.id);
-                    transactions.push(Transaction {
-                        timestamp: crate::impls::timestamp_now(),
-                        records: vec![Record::Create(edge)],
-                    });
+                    transactions.push(Transaction::create_edge(edge));
                     
                     // Recursively read contents of subdirectory
                     let mut subdir_path = path.to_vec();
