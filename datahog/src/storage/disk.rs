@@ -61,12 +61,93 @@ impl<RW: Reader + Writer + std::fmt::Debug + Sync + Send> SourceDisk<RW> {
         Self { disk }
     }
 
+    #[async_recursion]
     async fn read_dir(
         &mut self,
         parent: &Node,
         path: &[&str],
     ) -> anyhow::Result<Vec<Transaction>> {
-        Ok(())
+        let mut transactions = Vec::new();
+
+        // Read directory entries
+        let entries = self.disk.read_dir(path).await?;
+        
+        for entry in entries {
+            match entry {
+                DirectoryEntry::File(name) => {
+                    let content = self.disk.read_file(&[name]).await?;
+                    
+                    // Handle markdown files
+                    if name.ends_with(".md") {
+                        let mut md_txs = self.process_markdown(parent, name, &content).await?;
+                        transactions.extend(md_txs);
+                    } else {
+                        // Regular file: create a node with content as data
+                        let file_node = Node {
+                            id: NodeID::rnd(),
+                            kind: NodeKind::Container(BFContainer::MimeType("text/plain".to_string())),
+                            label: name.to_string(),
+                            data: DataHash::Bytes(content.into()),
+                            version: 0,
+                        };
+                        
+                        let record = Record::Create(file_node);
+                        transactions.push(Transaction {
+                            timestamp: crate::impls::timestamp_now(),
+                            records: vec![record],
+                        });
+                        
+                        // Create edge from parent to file node
+                        let edge = Edge {
+                            id: EdgeID::rnd(),
+                            kind: EdgeKind::Definition { object: file_node.id, label: parent.id },
+                            validity: Validity::From(crate::impls::timestamp_now()),
+                        };
+                        
+                        transactions.push(Transaction {
+                            timestamp: crate::impls::timestamp_now(),
+                            records: vec![Record::Create(edge)],
+                        });
+                    }
+                },
+                DirectoryEntry::Dir(name) => {
+                    // Create node for directory
+                    let dir_node = Node {
+                        id: NodeID::rnd(),
+                        kind: NodeKind::Container(BFContainer::Formatted),
+                        label: name.to_string(),
+                        data: DataHash::Bytes(Vec::new()),
+                        version: 0,
+                    };
+                    
+                    let record = Record::Create(dir_node);
+                    transactions.push(Transaction {
+                        timestamp: crate::impls::timestamp_now(),
+                        records: vec![record],
+                    });
+                    
+                    // Create edge from parent to directory node
+                    let edge = Edge {
+                        id: EdgeID::rnd(),
+                        kind: EdgeKind::Definition { object: dir_node.id, label: parent.id },
+                        validity: Validity::From(crate::impls::timestamp_now()),
+                    };
+                    
+                    transactions.push(Transaction {
+                        timestamp: crate::impls::timestamp_now(),
+                        records: vec![Record::Create(edge)],
+                    });
+                    
+                    // Recursively read contents of subdirectory
+                    let mut subdir_path = path.to_vec();
+                    subdir_path.push(name);
+                    let subdir_txs = self.read_dir(&dir_node, &subdir_path).await?;
+                    transactions.extend(subdir_txs);
+                },
+            }
+        }
+
+        Ok(transactions)
     }
 
     async fn process_markdown(
@@ -75,15 +156,16 @@ impl<RW: Reader + Writer + std::fmt::Debug + Sync + Send> SourceDisk<RW> {
         file_name: &str,
         content: &str,
     ) -> anyhow::Result<Vec<Transaction>> {
-        // Use markdown_ppp parser to process markdown content
+        // Placeholder — to be implemented later
         Ok(vec![])
     }
 
     async fn process_file(
         &mut self,
         file_name: &str,
-        content: &str,,
+        content: &str,
     ) -> anyhow::Result<Vec<Transaction>> {
+        // Placeholder — to be implemented later
         Ok(vec![])
     }
 }
