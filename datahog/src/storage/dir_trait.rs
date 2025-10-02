@@ -1,7 +1,8 @@
+//! The disk trait allows for easy testing the dist-storage backend, and then
+//! using the actual filesystem for read/write operations.
+
 use std::collections::HashMap;
 
-/// The disk trait allows for easy testing the dist-storage backend, and then
-/// using the actual filesystem for read/write operations.
 use async_trait::async_trait;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]

@@ -1,3 +1,5 @@
+//! The basic structs used throughout the datahog library.
+
 use std::collections::HashMap;
 
 use bytes::Bytes;
@@ -19,10 +21,6 @@ pub struct Transaction {
     /// Time of registration.
     pub timestamp: Timestamp,
     /// A set of records to create and/or update zero or more [Node]s and/or [Edge]s.
-    ///
-    /// TODO; When reading a [Transaction], it might lead to a
-    /// faulty, e.g., partial, description of a [Node].
-    /// What is the correct handling of these faulty [Node]s?
     pub records: Vec<Record>,
 }
 
@@ -61,7 +59,7 @@ pub struct Node {
     /// Data specific to this node
     pub data: DataHash,
     /// Edges to other nodes
-    pub edges: HashMap<EdgeID, Edge>,
+    pub edges: HashMap<EdgeID, EdgeKind>,
     /// Arguments used in this node, can be used in Node.data or by the implementation.
     pub arguments: HashMap<String, Argument>,
     /// The full history of this node
@@ -162,14 +160,17 @@ pub enum Argument {
     Float(BigFloat),
 }
 
+pub type RecordCUDNode = RecordCUD<NodeID, Node, NodeUpdate>;
+pub type RecordCUDEdge = RecordCUD<EdgeID, Edge, EdgeAction>;
+
 /// One entry in a transaction, representing actions on a single
 /// [Node] or [Edge].
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum Record {
     /// A [Node] entry with its [NodeID], the `Create` type, and the `Action` type.
-    Node(RecordCUD<NodeID, Node, NodeUpdate>),
+    Node(RecordCUDNode),
     /// An [Edge] entry with its [EdgeID], the `Create` type, and the `Action` type.
-    Edge(RecordCUD<EdgeID, Edge, EdgeAction>),
+    Edge(RecordCUDEdge),
 }
 
 /// A common structure for Node- and Edge- ID, creation, and update.
@@ -220,17 +221,17 @@ pub enum EdgeAction {
 /// The different kinds of [Edge]s available.
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum EdgeKind {
-    /// This type of [Edge] connects two or more [Node]s together.
+    /// An [EdgeKind::Equality] type of [Edge] connects two or more [Node]s together.
     /// These [Node]s are supposed to be very similar in one sense or another.
     Equality(Vec<NodeID>),
-    /// A definition type of [Edge] points from an _object_ to a _label_.
+    /// A [EdgeKind::Definition] type of [Edge] points from an _object_ to a _label_.
     /// The _label_ [Node] should be of type [NodeKind::Description].
     ///
     /// TODO: does a label need to have a link to all objects which point to it?
     Definition { object: NodeID, label: NodeID },
-    /// A using edge connects a [Node] as a _client_ to a [Node] as an _object_.
+    /// A [EdgeKind::Using] edge connects a [Node] as a _client_ to a [Node] as an _object_.
     Using { client: NodeID, object: NodeID },
-    /// A contains edge connects a [Node] as a _container_ to a [Node] as an _object_.
+    /// A [EdgeKind::Contains] edge connects a [Node] as a _container_ to a [Node] as an _object_.
     Contains { container: NodeID, object: NodeID },
 }
 

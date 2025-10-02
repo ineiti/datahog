@@ -11,6 +11,10 @@
 
 # History
 
+## 2025-10-02
+
+- worked on first implementation of `Node` and `Edge`, including Transactions.
+
 ## 2025-10-01
 
 - started to implement the datahog/src/storage with a `dir_trait` and a first `disk` implementation

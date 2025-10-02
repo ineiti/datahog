@@ -1,11 +1,14 @@
-use std::{collections::HashMap, f64::consts::E};
+//! The impls module contains implementations of the various traits and structs
+//! used throughout the datahog library.
+
+use std::collections::HashMap;
 
 use bytes::Bytes;
 use either::Either;
 
 use crate::structs::{
     BFContainer, DataHash, Edge, EdgeAction, EdgeID, EdgeKind, HasID, Node, NodeID, NodeKind,
-    NodeUpdate, Record, RecordCUD, Timestamp, Transaction, Validity,
+    NodeUpdate, Record, RecordCUD, RecordEvent, Timestamp, Transaction, Validity,
 };
 
 impl Node {
@@ -54,6 +57,19 @@ impl Node {
             NodeUpdate::Delete => {}
         }
     }
+
+    pub fn add_history(&mut self, re: RecordEvent) {
+        if let Some(last) = self.history.last() {
+            if last != &re {
+                self.history.push(re.clone());
+                if let Record::Node(rn) = &re.1 {
+                    for update in &rn.updates {
+                        self.update(update.clone());
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl HasID<NodeID> for Node {
@@ -78,7 +94,22 @@ impl Edge {
         }
     }
 
-    pub fn update(&mut self, _update: EdgeAction) {}
+    pub fn add_history(&mut self, re: RecordEvent) {
+        if let Some(last) = self.history.last() {
+            if last != &re {
+                self.history.push(re.clone());
+                if let Record::Edge(re) = &re.1 {
+                    for update in &re.updates {
+                        self.update(update.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn update(&mut self, _update: EdgeAction) {
+        todo!()
+    }
 }
 
 impl Validity {

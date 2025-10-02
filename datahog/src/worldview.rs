@@ -1,13 +1,15 @@
-/// The [WorldView] is responsible for managing the data from multiple [Source]s,
-/// ensuring that the data is consistent and up-to-date. It provides a single
-/// interface for accessing and manipulating the data, making it easy to work
-/// with the data from different sources.
+//! The [WorldView] is responsible for managing the data from multiple [Source]s,
+//! ensuring that the data is consistent and up-to-date. It provides a single
+//! interface for accessing and manipulating the data, making it easy to work
+//! with the data from different sources.
+
 use std::collections::HashMap;
 
 use tokio::sync::mpsc::{Receiver, Sender, channel};
 
 use crate::structs::{
-    Edge, EdgeID, Node, NodeID, Record, Source, SourceCapabilities, SourceID, Transaction,
+    Edge, EdgeID, Node, NodeID, Record, RecordEvent, Source, SourceCapabilities, SourceID,
+    Transaction,
 };
 
 #[derive(Debug)]
@@ -81,6 +83,7 @@ impl WorldView {
         if let Some(source) = self.source_update.get_mut(id) {
             let mut txs = vec![];
             while let Ok(tx) = source.try_recv() {
+                log::trace!("Got transaction {tx:?}");
                 txs.push(tx);
             }
             let (mut nodes, mut edges) = (vec![], vec![]);
@@ -99,41 +102,86 @@ impl WorldView {
         let (mut nids, mut eids) = (vec![], vec![]);
         self.transactions.push(tx.clone());
         for r in tx.records {
+            let rec_event = RecordEvent(tx.timestamp, r.clone());
             match r {
                 Record::Node(rc) => {
-                    let id = rc.get_id();
-                    if let Some(node) = rc.base.right() {
-                        self.nodes.insert(id.clone(), node);
-                    }
-                    if !rc.updates.is_empty() {
-                        if let Some(node) = self.nodes.get_mut(&id) {
-                            for update in rc.updates {
-                                node.update(update);
+                    nids.push(rc.get_id());
+                    match rc.base {
+                        either::Either::Left(id) => {
+                            if let Some(node) = self.nodes.get_mut(&id) {
+                                node.add_history(rec_event.clone());
+                            } else {
+                                log::error!("Node {id} not found for update");
                             }
-                        } else {
-                            log::error!("Node {} not found for update", id);
+                        }
+                        either::Either::Right(mut node) => {
+                            node.add_history(rec_event);
+                            self.nodes.insert(node.id.clone(), node);
                         }
                     }
-                    nids.push(id);
                 }
                 Record::Edge(rc) => {
-                    let id = rc.get_id();
-                    if let Some(edge) = rc.base.right() {
-                        self.edges.insert(id.clone(), edge);
-                    }
-                    if !rc.updates.is_empty() {
-                        if let Some(edge) = self.edges.get_mut(&id) {
-                            for update in rc.updates {
-                                edge.update(update);
+                    eids.push(rc.get_id());
+                    match rc.base {
+                        either::Either::Left(id) => {
+                            if let Some(mut edge) = self.edges.get(&id).cloned() {
+                                self.remove_edge_from_nodes(&rec_event, &edge);
+                                edge.add_history(rec_event.clone());
+                                self.apply_edge_to_nodes(&rec_event, &edge);
+                                self.edges.insert(edge.id.clone(), edge);
+                            } else {
+                                log::error!("Edge {id} not found for update");
                             }
-                        } else {
-                            log::error!("Edge {} not found for update", id);
+                        }
+                        either::Either::Right(mut edge) => {
+                            edge.add_history(rec_event.clone());
+                            self.apply_edge_to_nodes(&rec_event, &edge);
+                            self.edges.insert(edge.id.clone(), edge);
                         }
                     }
-                    eids.push(id);
                 }
             }
         }
         (nids, eids)
+    }
+
+    fn remove_edge_from_nodes(&mut self, re: &RecordEvent, edge: &Edge) {
+        for node in match &edge.kind {
+            crate::structs::EdgeKind::Equality(_node_ids) => {
+                todo!()
+            }
+            crate::structs::EdgeKind::Definition { object, label } => vec![object, label],
+            crate::structs::EdgeKind::Using { client, object } => vec![client, object],
+            crate::structs::EdgeKind::Contains { container, object } => {
+                vec![container, object]
+            }
+        } {
+            if let Some(node) = self.nodes.get_mut(node) {
+                node.edges.remove(&edge.id);
+                node.history.push(re.clone());
+            }
+        }
+    }
+
+    fn apply_edge_to_nodes(&mut self, re: &RecordEvent, edge: &Edge) {
+        for node in match &edge.kind {
+            crate::structs::EdgeKind::Equality(_node_ids) => {
+                todo!()
+            }
+            crate::structs::EdgeKind::Definition { object, label } => vec![object, label],
+            crate::structs::EdgeKind::Using { client, object } => vec![client, object],
+            crate::structs::EdgeKind::Contains { container, object } => {
+                vec![container, object]
+            }
+        } {
+            if let Some(node) = self.nodes.get_mut(node) {
+                node.edges.insert(edge.id.clone(), edge.kind.clone());
+                if let Some(history) = node.history.last_mut() {
+                    if history != re {
+                        node.history.push(re.clone());
+                    }
+                }
+            }
+        }
     }
 }
