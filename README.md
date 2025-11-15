@@ -1,19 +1,12 @@
 # DataHog
 
-My goal was to feed the following into an LLM and then get a finalized app.
-Unfortunately this didn't work out.
-So now I'm writing it on my own, old-school style.
-Well, with _some_ support from my friends...
-
-## Project Overview
-
 Datahog proposes a flexible data visualization and management system that allows users to organize, relate, and view information in multiple ways. The system supports various data types with different visualization options and user-defined relationships.
 
 ## Data Model
 
 The database stores the following elements:
 
-- **Data elements**: Can be markdown formatted text, URL links, CSV-formatted data, checkboxes, dates, or binary files
+- **Data elements**: Can be markdown formatted text, URL links, CSV-formatted data, checkboxes, dates, ...
 - **Binary files**: Stored on the filesystem with database references using a tree structure: `/[file-type]/[first-letter-of-filename]/[full-filename]`
 - **Links between elements**: Directional connections defining relationships like "contains" or "is-a-type"
   - All elements can link to any other element with "contains"

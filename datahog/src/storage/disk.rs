@@ -10,16 +10,13 @@
 //! - use git-history to integrate outside changes
 //! - read other file formats
 
+use anyhow::Result;
 use async_recursion::async_recursion;
 use bytes::Bytes;
-use tokio::sync::mpsc::Receiver;
 
 use crate::{
     storage::dir_trait::{DirectoryEntry, Reader, Writer},
-    structs::{
-        BFContainer, DataHash, Edge, Node, NodeID, Source, SourceCapabilities, SourceID,
-        Transaction,
-    },
+    structs::{BFContainer, DataHash, Edge, Node, NodeID, Source, SourceID, Transaction},
 };
 
 #[derive(Debug)]
@@ -28,38 +25,36 @@ where
     RW: Reader + Writer + std::fmt::Debug + Sync + Send,
 {
     disk: RW,
+    read: bool,
 }
 
 #[async_trait::async_trait]
 impl<RW: Reader + Writer + std::fmt::Debug + Sync + Send> Source for SourceDisk<RW> {
-    async fn capabilities(&self) -> anyhow::Result<SourceCapabilities> {
-        Ok(SourceCapabilities {
-            id: SourceID::rnd(),
-            auto_fetch: true,
-            accepts_txs: false,
-            can_search: false,
-        })
+    async fn get_updates(&mut self) -> anyhow::Result<Vec<Transaction>> {
+        if !self.read {
+            self.read = true;
+            // Start with root directory (empty path) and a labelled parent node.
+            let root = Node::label("root");
+            let txs = self.read_dir(&root.id, vec![]).await?;
+            Ok([vec![Transaction::create_node(root)], txs].concat())
+        } else {
+            Ok(vec![])
+        }
     }
 
-    async fn subscribe(
-        &mut self,
-        _store: Receiver<Transaction>,
-    ) -> anyhow::Result<Receiver<Transaction>> {
-        let (sender, disk_txs) = tokio::sync::mpsc::channel(100);
-        // Start with root directory (empty path) and a labelled parent node.
-        let root = Node::label("root");
-        let txs = self.read_dir(&root.id, vec![]).await?;
-        sender.send(Transaction::create_node(root)).await?;
-        for tx in txs {
-            sender.send(tx).await?;
-        }
-        Ok(disk_txs)
+    async fn add_tx(&mut self, _txs: Vec<Transaction>) -> Result<()> {
+        todo!()
+    }
+
+    /// Returns the unique ID of this source.
+    fn get_id(&self) -> SourceID {
+        todo!()
     }
 }
 
 impl<RW: Reader + Writer + std::fmt::Debug + Sync + Send> SourceDisk<RW> {
     pub fn new(disk: RW) -> Self {
-        Self { disk }
+        Self { disk, read: false }
     }
 
     #[async_recursion]

@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import init, { Datahog, Edge, EdgeID, NodeID, Transaction } from 'datahog-npm';
-import { Subject, Subscriber } from 'rxjs';
+import { Subject } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DataHogService {
   done: Subject<void> = new Subject();
@@ -15,8 +15,8 @@ export class DataHogService {
       Datahog.new().then((dh) => {
         this._dh = dh;
         this.done.next();
-      })
-    })
+      });
+    });
   }
 
   get rootNodeID(): NodeID {
@@ -34,5 +34,4 @@ export class DataHogService {
     this._dh!.get_edge(id, (edge: Edge) => s.next(edge));
     return s;
   }
-
 }

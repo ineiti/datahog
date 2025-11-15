@@ -1,19 +1,23 @@
-use tokio::sync::mpsc::Receiver;
+use anyhow::Result;
 
-use crate::structs::{Source, SourceCapabilities, Transaction};
+use crate::structs::{Source, SourceID, Transaction};
 
 #[derive(Debug)]
 pub struct SourceIMAP {}
 
 #[async_trait::async_trait]
 impl Source for SourceIMAP {
-    async fn capabilities(&self) -> anyhow::Result<SourceCapabilities> {
+    async fn get_updates(&mut self) -> Result<Vec<Transaction>> {
         todo!()
     }
-    async fn subscribe(
-        &mut self,
-        _store: Receiver<Transaction>,
-    ) -> anyhow::Result<Receiver<Transaction>> {
+
+    /// Adds one or more [Transaction]s to this source.
+    async fn add_tx(&mut self, _txs: Vec<Transaction>) -> Result<()> {
+        todo!()
+    }
+
+    /// Returns the unique ID of this source.
+    fn get_id(&self) -> SourceID {
         todo!()
     }
 }

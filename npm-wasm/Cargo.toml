@@ -22,20 +22,20 @@ datahog = { path = "../datahog" }
 anyhow = "1"
 async-trait = "0.1"
 console_error_panic_hook = "0.1"
+either = "1"
+flarch = { version = "0.10", features = ["node"] }
+flmacro = { version = "0.10", features = ["node"] }
 getrandom = { version = "0.2", features = ["js"] }
 js-sys = "0.3"
 log = "0.4"
+reqwest = { version = "0.12", features = ["json"] }
+serde = "1"
 tokio = "1"
 urlencoding = "2"
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 wasm-bindgen-test = "*"
 wasm-bindgen-futures = "0.4"
 wasm-logger = "0.2"
-
-[dependencies.flarch]
-path = "../../../ineiti/fledger/flarch"
-version = "0.9"
-# features = ["node"]
 
 [dependencies.web-sys]
 version = "0.3"

@@ -12,6 +12,7 @@ use crate::structs::{
 };
 
 impl Node {
+    /// Create a label node with the indicated label.
     pub fn label(label: &str) -> Self {
         Self {
             id: NodeID::rnd(),
@@ -25,6 +26,7 @@ impl Node {
         }
     }
 
+    /// Create a container node with the indicated container.
     pub fn container(container: BFContainer) -> Self {
         Self {
             id: NodeID::rnd(),

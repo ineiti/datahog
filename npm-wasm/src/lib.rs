@@ -1,30 +1,20 @@
-use anyhow::Result;
-use datahog::{
-    structs::{
-        self, BFRender, Edge, EdgeKind, Node, NodeKind, Record, RecordCUD, Source,
-        SourceCapabilities, SourceID,
-    },
-    worldview::WorldView,
-};
-use flarch::{
-    broker::{Broker, SubsystemHandler},
-    nodeids::U256,
-    platform_async_trait,
-    tasks::{now, spawn_local, wait_ms},
-};
-use js_sys::Function;
 use std::collections::HashMap;
-use tokio::sync::mpsc;
+
+use datahog::structs::{Edge, EdgeID, Node, NodeID};
+use flarch::nodeids::U256;
+use flmacro::AsU256;
+use serde::{de::DeserializeOwned, Serialize};
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_test::{console_error, console_log};
 
 use datahog::structs::Transaction;
 
-#[wasm_bindgen]
-pub struct NodeID(U256);
+#[wasm_bindgen(js_name = NodeID)]
+#[derive(AsU256)]
+pub struct NodeIDWrapper(U256);
 
-#[wasm_bindgen]
-pub struct EdgeID(U256);
+#[wasm_bindgen(js_name = EdgeID)]
+#[derive(AsU256)]
+pub struct EdgeIDWrapper(U256);
 
 #[wasm_bindgen(js_name = Transaction)]
 pub struct TransactionWrapper(Transaction);
@@ -56,8 +46,8 @@ impl EdgeWrapper {
     }
 
     #[wasm_bindgen(getter)]
-    pub fn id(&self) -> EdgeID {
-        EdgeID(self.0.id().into())
+    pub fn id(&self) -> EdgeIDWrapper {
+        EdgeIDWrapper(self.0.id.clone().into())
     }
 }
 
@@ -72,220 +62,86 @@ impl NodeWrapper {
     }
 
     #[wasm_bindgen(getter)]
-    pub fn id(&self) -> NodeID {
-        NodeID(self.0.id().into())
+    pub fn id(&self) -> NodeIDWrapper {
+        NodeIDWrapper(self.0.id.clone().into())
     }
 }
 
 #[wasm_bindgen]
 pub struct Datahog {
-    root_id: NodeID,
-    broker: Broker<BackIn, BackOut>,
+    url: String,
+    root: NodeID,
+    nodes: HashMap<NodeID, Node>,
+    edges: HashMap<EdgeID, Edge>,
 }
 
 #[wasm_bindgen]
 impl Datahog {
-    pub async fn new() -> Self {
-        let mut broker = Broker::new();
-        let mut b_clone = broker.clone();
-        spawn_local(async move {
-            loop {
-                console_log!("Looping");
-                b_clone.emit_msg_in(BackIn::Simulate).unwrap();
-                wait_ms(1000).await;
-            }
-        });
-
-        match Background::new().await {
-            Ok(bg) => {
-                broker.add_handler(Box::new(bg)).await.unwrap();
-                Self {
-                    root_id: NodeID(U256::zero()),
-                    broker,
-                }
-            }
-            Err(err) => panic!("Couldn't initialize Background: {err:?}"),
-        }
-    }
-
-    #[wasm_bindgen(getter, js_name = rootNodeID)]
-    pub fn root_node_id(&self) -> NodeID {
-        NodeID(self.root_id.0.clone())
-    }
-
-    pub fn get_node(&mut self, id: NodeID, callback: Function) {
-        self.broker
-            .emit_msg_in(BackIn::GetNode(id.0, callback))
-            .unwrap();
-    }
-
-    pub fn get_edge(&mut self, id: EdgeID, callback: Function) {
-        self.broker
-            .emit_msg_in(BackIn::GetEdge(id.0, callback))
-            .unwrap();
-    }
-}
-
-#[derive(Debug)]
-struct DummySource {
-    id: U256,
-    _transactions_out: mpsc::Sender<Transaction>,
-    transactions_out_rx: Option<mpsc::Receiver<Transaction>>,
-}
-
-impl DummySource {
-    fn new() -> Self {
-        let (tx, rx) = mpsc::channel(10);
-        Self {
-            id: U256::rnd(),
-            _transactions_out: tx,
-            transactions_out_rx: Some(rx),
-        }
-    }
-}
-
-#[async_trait::async_trait]
-impl Source for DummySource {
-    async fn capabilities(&self) -> anyhow::Result<SourceCapabilities> {
-        return Ok(SourceCapabilities {
-            id: self.id.clone().into(),
-            can_fetch: true,
-            can_create: true,
-            can_update: true,
-            can_search: false,
-        });
-    }
-
-    async fn subscribe(
-        &mut self,
-        _store: mpsc::Receiver<Transaction>,
-    ) -> anyhow::Result<mpsc::Receiver<Transaction>> {
-        match self.transactions_out_rx.take() {
-            Some(rx) => Ok(rx),
-            None => Err(anyhow::anyhow!("Already gave receiver")),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-enum BackIn {
-    GetNode(U256, Function),
-    GetEdge(U256, Function),
-    Simulate,
-}
-
-#[derive(Debug, Clone)]
-enum BackOut {
-    _Nope,
-}
-
-struct Background {
-    nodes: HashMap<U256, Function>,
-    edges: HashMap<U256, Function>,
-    source_id: SourceID,
-    wv: WorldView,
-}
-
-impl Background {
-    async fn new() -> Result<Self> {
-        let mut wv = WorldView::new();
-        let ds = DummySource::new();
-        let source_id: SourceID = ds.id.clone().into();
-        wv.add_source(Box::new(ds)).await?;
-        wv.add_transactions(
-            &source_id,
-            vec![Transaction {
-                timestamp: now() as i128,
-                records: vec![Record::Node(RecordCUD {
-                    id: structs::NodeID::zero(),
-                    create: Some((NodeKind::Label, 0)),
-                    updates: vec![],
-                })],
-            }],
-        );
-        Ok(Self {
-            wv,
-            source_id,
+    pub async fn new(url: String) -> Result<Self, String> {
+        let mut dh = Self {
+            url,
+            root: NodeID::zero(),
             nodes: HashMap::new(),
             edges: HashMap::new(),
-        })
-    }
-
-    fn get_node(&mut self, id: U256, callback: Function) -> Option<BackOut> {
-        self.nodes.insert(id, callback);
-        None
-    }
-
-    fn get_edge(&mut self, id: U256, callback: Function) -> Option<BackOut> {
-        self.edges.insert(id, callback);
-        None
-    }
-
-    async fn simulate(&mut self) -> Option<BackOut> {
-        console_log!("Simulating");
-        let node_id = structs::NodeID::rnd();
-        let node = Transaction {
-            timestamp: now() as i128,
-            records: vec![Record::Node(RecordCUD {
-                id: node_id.clone(),
-                create: Some((NodeKind::Render(BFRender::Markdown), 0)),
-                updates: vec![],
-            })],
         };
-        let edge = Transaction {
-            timestamp: now() as i128,
-            records: vec![Record::Edge(RecordCUD {
-                id: structs::EdgeID::rnd(),
-                create: Some(EdgeKind::Definition {
-                    object: node_id.clone(),
-                    label: structs::NodeID::zero(),
-                }),
-                updates: vec![],
-            })],
-        };
-        self.wv.add_transactions(&self.source_id, vec![node, edge]);
-        if let Err(e) = self.fetch().await {
-            console_error!("While fetching: {e:?}");
-        }
-        None
+        let root: Node = dh.get("init").await?;
+        let root_id = root.id.clone();
+        dh.nodes.insert(root_id.clone(), root);
+        dh.root = root_id;
+        Ok(dh)
     }
 
-    async fn fetch(&mut self) -> Result<()> {
-        let (_, nodes, edges) = self.wv.fetch().await?;
-        for id in nodes {
-            if let Some(cb) = self.nodes.get(&id) {
-                if let Some(node) = self.wv.get_node(&id) {
-                    if let Err(e) = cb.call1(&JsValue::NULL, &NodeWrapper(node).into()) {
-                        console_error!("Error in node callback for {id}: {e:?}");
-                    }
-                }
-            }
+    pub fn root_id(&self) -> NodeIDWrapper {
+        NodeIDWrapper(*self.root)
+    }
+
+    pub async fn get_node(&mut self, id: NodeIDWrapper) -> Result<NodeWrapper, String> {
+        if let Some(node) = self.nodes.get(&(*id).into()) {
+            return Ok(NodeWrapper(node.clone()));
         }
-        for id in edges {
-            if let Some(cb) = self.edges.get(&id) {
-                if let Some(edge) = self.wv.get_edge(&id) {
-                    if let Err(e) = cb.call1(&JsValue::NULL, &EdgeWrapper(edge).into()) {
-                        console_error!("Error in edge callback for {id}: {e:?}");
-                    }
-                }
-            }
+        if let Some(node) = self.get(&format!("get_node?id={id:?}")).await? {
+            return Ok(NodeWrapper(node));
         }
+        Err("No such node found".into())
+    }
+
+    pub async fn get_edge(&mut self, id: EdgeIDWrapper) -> Result<EdgeWrapper, String> {
+        if let Some(edge) = self.edges.get(&(*id).into()) {
+            return Ok(EdgeWrapper(edge.clone()));
+        }
+        if let Some(edge) = self.get(&format!("get_edge?id={id:?}")).await? {
+            return Ok(EdgeWrapper(edge));
+        }
+        Err("No such edge found".into())
+    }
+
+    pub async fn update_node(&mut self, node: NodeWrapper) -> Result<(), String> {
+        self.post("update_node", node.0).await?;
         Ok(())
     }
-}
 
-#[platform_async_trait()]
-impl SubsystemHandler<BackIn, BackOut> for Background {
-    async fn messages(&mut self, msgs: Vec<BackIn>) -> Vec<BackOut> {
-        let mut out = vec![];
-        for msg in msgs {
-            match msg {
-                BackIn::GetEdge(id, cb) => self.get_edge(id, cb),
-                BackIn::GetNode(id, cb) => self.get_node(id, cb),
-                BackIn::Simulate => self.simulate().await,
-            }
-            .map(|o| out.push(o));
-        }
-        out
+    pub async fn update_edge(&mut self, edge: EdgeWrapper) -> Result<(), String> {
+        self.post("update_edge", edge.0).await?;
+        Ok(())
+    }
+
+    async fn get<T: DeserializeOwned>(&mut self, api: &str) -> Result<T, String> {
+        reqwest::get(&format!("{}/{api}", self.url))
+            .await
+            .map_err(|e| format!("{e:?}"))?
+            .json::<T>()
+            .await
+            .map_err(|e| format!("{e:?}"))
+    }
+
+    async fn post<T: Serialize>(&mut self, api: &str, body: T) -> Result<(), String> {
+        let client = reqwest::Client::new();
+        client
+            .post(&format!("{}/{api}", self.url))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| format!("{e:?}"))?;
+        Ok(())
     }
 }

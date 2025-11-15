@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use anyhow::Result;
 use bytes::Bytes;
 use either::Either;
 use flarch::nodeids::U256;
@@ -9,7 +10,6 @@ use flmacro::{AsU256, VersionedSerde};
 use num_bigfloat::BigFloat;
 use num_bigint::BigInt;
 use serde::{Deserialize, Serialize};
-use tokio::sync::mpsc::Receiver;
 
 /// A [Transaction] is the fundamental storage entity in `DataHog`.
 /// All [Transaction]s must be read in order to get the current state
@@ -247,24 +247,19 @@ pub struct EdgeID(U256);
 #[derive(AsU256, Deserialize, Serialize, Clone, PartialEq, Eq, Hash)]
 pub struct SourceID(U256);
 
-/// What this source can do.
-#[derive(Clone, Debug)]
-pub struct SourceCapabilities {
-    pub id: SourceID,
-    pub auto_fetch: bool,
-    pub accepts_txs: bool,
-    pub can_search: bool,
-}
-
 /// A [Source] of [Node]s and [Edge]s.
 #[async_trait::async_trait]
 pub trait Source: std::fmt::Debug {
-    async fn capabilities(&self) -> anyhow::Result<SourceCapabilities>;
+    /// Returns all new transactions since the last call to this method.
+    /// After the [Source] gets initialized, this method returns all available
+    /// [Transaction]s.
+    async fn get_updates(&mut self) -> Result<Vec<Transaction>>;
 
-    async fn subscribe(
-        &mut self,
-        store: Receiver<Transaction>,
-    ) -> anyhow::Result<Receiver<Transaction>>;
+    /// Adds one or more [Transaction]s to this source.
+    async fn add_tx(&mut self, txs: Vec<Transaction>) -> Result<()>;
+
+    /// Returns the unique ID of this source.
+    fn get_id(&self) -> SourceID;
 }
 
 pub trait HasID<T>: std::fmt::Debug {
@@ -277,6 +272,8 @@ pub trait HasID<T>: std::fmt::Debug {
 /// heat death of it.
 /// To allow for planck time (5*10**-45 s) resolution until the (premature) heat death of the universe
 /// in 10**90 years, this would be 512 bits, which seems a bit excessive.
+/// Update November 2025: we might get a big crunch, so perhaps it's earlier than
+/// 10**90 years?
 pub type Timestamp = i128;
 
 /// How to operate on this node, if there are multiple versions of this

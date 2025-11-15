@@ -1,46 +1,71 @@
 use std::sync::Arc;
 
-use datahog::{worldview::WorldView, structs::Transaction};
-use rocket::{
-    response::status::BadRequest,
-    serde::{Deserialize, Serialize}, tokio::sync::Mutex,
-};
+use datahog::structs::{Edge, EdgeID, Node, NodeID};
+use rocket::{response::status::BadRequest, tokio::sync::Mutex};
+use sled::Db;
 
 pub struct Storage {
-    _wv: Arc<Mutex<WorldView>>,
+    db: Arc<Mutex<Db>>,
+    root: Node,
 }
 
 impl Storage {
-    pub fn new() -> Self {
-        Self {
-            _wv: Arc::new(Mutex::new(WorldView::new())),
-        }
+    pub fn new() -> anyhow::Result<Self> {
+        let mut db = sled::open("./sledge.db")?;
+        let root = Self::get_root(&mut db)?;
+        Ok(Self {
+            root,
+            db: Arc::new(Mutex::new(db)),
+        })
     }
 
-    pub async fn get_updates(
-        &self,
-        list: UpdateRequest,
-    ) -> Result<UpdateReply, BadRequest<String>> {
-        let reply = UpdateReply {
-            transactions: vec![],
-        };
-        for tx in list.transactions {
-            log::debug!("Got tx: {:?}", tx);
+    fn get_root(db: &mut Db) -> anyhow::Result<Node> {
+        if let Some(id_u8) = db.get(*NodeID::zero())? {
+            let id: [u8; 32] = id_u8.as_ref().try_into()?;
+            let id: NodeID = id.into();
+            if let Some(root_u8) = db.get(*id)? {
+                return Ok(serde_yaml::from_slice(&root_u8)?);
+            }
         }
-        Ok(reply)
+        let root = Node::label("Universe");
+        db.insert(NodeID::zero(), root.id.as_ref())?;
+        db.insert(root.id.as_ref(), serde_yaml::to_vec(&root)?)?;
+        Ok(root)
     }
 
-    pub fn reset(&self) {}
-}
+    pub async fn get_node(&self, id: NodeID) -> Result<Node, BadRequest<String>> {
+        let db = self.db.lock().await;
+        if let Some(val) = db.get(*id).map_err(|e| BadRequest(e.to_string()))? {
+            return Ok(serde_yaml::from_slice(&val).map_err(|e| BadRequest(format!("{e:?}")))?);
+        }
+        Err(BadRequest("Node not found".into()))
+    }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-#[serde(crate = "rocket::serde")]
-pub struct UpdateRequest {
-    pub transactions: Vec<Transaction>,
-}
+    pub async fn get_edge(&self, id: EdgeID) -> Result<Edge, BadRequest<String>> {
+        let db = self.db.lock().await;
+        if let Some(val) = db.get(*id).map_err(|e| BadRequest(e.to_string()))? {
+            return Ok(serde_yaml::from_slice(&val).map_err(|e| BadRequest(format!("{e:?}")))?);
+        }
+        Err(BadRequest("Edge not found".into()))
+    }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-#[serde(crate = "rocket::serde")]
-pub struct UpdateReply {
-    pub transactions: Vec<Transaction>,
+    pub async fn update_node(&self, node: Node) -> Result<(), BadRequest<String>> {
+        let db = self.db.lock().await;
+        let buf = serde_yaml::to_vec(&node).map_err(|e| BadRequest(format!("{e:?}")))?;
+        db.insert(*node.id, buf)
+            .map_err(|e| BadRequest(format!("{e:?}")))?;
+        Ok(())
+    }
+
+    pub async fn update_edge(&self, edge: Edge) -> Result<(), BadRequest<String>> {
+        let db = self.db.lock().await;
+        let buf = serde_yaml::to_vec(&edge).map_err(|e| BadRequest(format!("{e:?}")))?;
+        db.insert(*edge.id, buf)
+            .map_err(|e| BadRequest(format!("{e:?}")))?;
+        Ok(())
+    }
+
+    pub fn init(&self) -> Node {
+        self.root.clone()
+    }
 }
