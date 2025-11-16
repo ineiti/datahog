@@ -1,1 +1,12 @@
-/* You can add global styles to this file, and also import other style files */
+body {
+  height: calc(100vh - 4px);
+  width: calc(100vw - 4px);
+  border: 2px solid green;
+  margin: 0px;
+}
+
+.full {
+  height: calc(100% - 4px);
+  width: calc(100% - 4px);
+  border: 2px solid red;
+}

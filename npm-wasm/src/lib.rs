@@ -91,6 +91,7 @@ impl Datahog {
         Ok(dh)
     }
 
+    #[wasm_bindgen(getter)]
     pub fn root_id(&self) -> NodeIDWrapper {
         NodeIDWrapper(*self.root)
     }
