@@ -1,15 +1,15 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { Instance as TippyInstance } from 'tippy.js';
 
 @Component({
   selector: 'tiptap-editor',
-  imports: [],
+  standalone: true,
   templateUrl: './tiptap-editor.html',
   styleUrl: './tiptap-editor.scss',
 })
-export class TipTapEditor implements OnDestroy {
+export class TipTapEditor implements OnInit, OnDestroy {
   private editor: Editor | null = null;
   private popup: TippyInstance<any> | null = null;
 
@@ -42,34 +42,19 @@ export class TipTapEditor implements OnDestroy {
       {
         title: 'Heading 1',
         command: ({ editor, range }: any) => {
-          editor
-            .chain()
-            .focus()
-            .deleteRange(range)
-            .setNode('heading', { level: 1 })
-            .run();
+          editor.chain().focus().deleteRange(range).setNode('heading', { level: 1 }).run();
         },
       },
       {
         title: 'Heading 2',
         command: ({ editor, range }: any) => {
-          editor
-            .chain()
-            .focus()
-            .deleteRange(range)
-            .setNode('heading', { level: 2 })
-            .run();
+          editor.chain().focus().deleteRange(range).setNode('heading', { level: 2 }).run();
         },
       },
       {
         title: 'Heading 3',
         command: ({ editor, range }: any) => {
-          editor
-            .chain()
-            .focus()
-            .deleteRange(range)
-            .setNode('heading', { level: 3 })
-            .run();
+          editor.chain().focus().deleteRange(range).setNode('heading', { level: 3 }).run();
         },
       },
       {
@@ -197,7 +182,7 @@ export class TipTapEditor implements OnDestroy {
                   const { state } = view;
                   const text = state.doc.textBetween(from + 1, state.selection.from);
                   filteredItems = commandItems.filter((item) =>
-                    item.title.toLowerCase().includes(text.toLowerCase())
+                    item.title.toLowerCase().includes(text.toLowerCase()),
                   );
                   selectedIndex = 0;
 

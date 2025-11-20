@@ -13,8 +13,13 @@
   font-size: 16px;
   line-height: 1.6;
 
-  &:focus {
+  /* Target the ProseMirror editor element */
+  :global(.ProseMirror) {
     outline: none;
+    min-height: 360px;
+  }
+
+  &:focus-within {
     border-color: #3b82f6;
   }
 

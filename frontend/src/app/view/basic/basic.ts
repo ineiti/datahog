@@ -29,10 +29,10 @@ import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical';
 import { EditorView, basicSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
-import '@blocknote/mantine/style.css';
-import '@blocknote/core/fonts/inter.css';
 
-// Blocknote
+// Blocknote - CSS imports commented out to prevent build errors with font files
+// import '@blocknote/mantine/style.css';
+// import '@blocknote/core/fonts/inter.css';
 import { BlockNoteEditor } from '@blocknote/core';
 
 // TipTap - Works great with Angular and has free slash commands!
@@ -40,7 +40,7 @@ import { TipTapEditor } from './tiptap-editor';
 
 @Component({
   selector: 'view-basic',
-  imports: [TipTapEditor],
+  // imports: [TipTapEditor],
   templateUrl: './basic.html',
   styleUrl: './basic.scss',
 })
@@ -52,6 +52,11 @@ export class Basic {
     this.editor = document.getElementById('editor');
     // Comment out to test other editors:
     // this.tinyMCE();
+  }
+
+  blocknote() {
+    const editor = BlockNoteEditor.create();
+    editor.mount(this.editor!);
   }
 
   tinyMCE() {

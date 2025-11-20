@@ -1,11 +1,12 @@
-import { Basic } from './view/basic/basic';
+// import { Basic } from './view/basic/basic';
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { DataHogService } from './data-hog';
+import { TiptapComponent } from './view/tiptap/tiptap.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Basic],
+  imports: [RouterOutlet, TiptapComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
