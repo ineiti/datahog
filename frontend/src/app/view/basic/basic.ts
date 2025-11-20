@@ -35,9 +35,12 @@ import '@blocknote/core/fonts/inter.css';
 // Blocknote
 import { BlockNoteEditor } from '@blocknote/core';
 
+// TipTap - Works great with Angular and has free slash commands!
+import { TipTapEditor } from './tiptap-editor';
+
 @Component({
   selector: 'view-basic',
-  imports: [],
+  imports: [TipTapEditor],
   templateUrl: './basic.html',
   styleUrl: './basic.scss',
 })
@@ -47,12 +50,8 @@ export class Basic {
   async ngOnInit() {
     console.log('View-basic 2');
     this.editor = document.getElementById('editor');
-    this.blocknote();
-  }
-
-  blocknote() {
-    const editor = BlockNoteEditor.create();
-    editor.mount(document.getElementById('editor')!); // element to append the editor to
+    // Comment out to test other editors:
+    // this.tinyMCE();
   }
 
   tinyMCE() {
