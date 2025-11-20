@@ -31,9 +31,12 @@ import { EditorView, basicSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
 
+// TipTap - Works great with Angular and has free slash commands!
+import { TipTapEditor } from './tiptap-editor';
+
 @Component({
   selector: 'view-basic',
-  imports: [],
+  imports: [TipTapEditor],
   templateUrl: './basic.html',
   styleUrl: './basic.scss',
 })
@@ -43,7 +46,8 @@ export class Basic {
   async ngOnInit() {
     console.log('View-basic 2');
     this.editor = document.getElementById('editor');
-    this.tinyMCE();
+    // Comment out to test other editors:
+    // this.tinyMCE();
   }
 
   tinyMCE() {
