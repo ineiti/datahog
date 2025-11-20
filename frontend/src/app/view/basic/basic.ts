@@ -20,16 +20,20 @@ import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical';
 
 // BlockSuite - has typos in it and doesn't work
 // import '@blocksuite/presets/themes/affine.css';
-
-import { AffineSchemas } from '@blocksuite/blocks';
-import { AffineEditorContainer } from '@blocksuite/presets';
-import { Schema } from '@blocksuite/store';
-import { DocCollection, Text } from '@blocksuite/store';
+// import { AffineSchemas } from '@blocksuite/blocks';
+// import { AffineEditorContainer } from '@blocksuite/presets';
+// import { Schema } from '@blocksuite/store';
+// import { DocCollection, Text } from '@blocksuite/store';
 
 // CodeMirror
 import { EditorView, basicSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
+import '@blocknote/mantine/style.css';
+import '@blocknote/core/fonts/inter.css';
+
+// Blocknote
+import { BlockNoteEditor } from '@blocknote/core';
 
 @Component({
   selector: 'view-basic',
@@ -43,7 +47,12 @@ export class Basic {
   async ngOnInit() {
     console.log('View-basic 2');
     this.editor = document.getElementById('editor');
-    this.tinyMCE();
+    this.blocknote();
+  }
+
+  blocknote() {
+    const editor = BlockNoteEditor.create();
+    editor.mount(document.getElementById('editor')!); // element to append the editor to
   }
 
   tinyMCE() {
@@ -216,27 +225,27 @@ export class Basic {
     });
   }
 
-  blocksuite() {
-    const schema = new Schema().register(AffineSchemas);
-    const collection = new DocCollection({ schema });
-    collection.meta.initialize();
+  // blocksuite() {
+  //   const schema = new Schema().register(AffineSchemas);
+  //   const collection = new DocCollection({ schema });
+  //   collection.meta.initialize();
 
-    const doc = collection.createDoc();
-    const editor = new AffineEditorContainer();
-    editor.doc = doc;
-    this.editor!.append(editor);
+  //   const doc = collection.createDoc();
+  //   const editor = new AffineEditorContainer();
+  //   editor.doc = doc;
+  //   this.editor!.append(editor);
 
-    function createDoc() {
-      doc.load(() => {
-        const pageBlockId = doc.addBlock('affine:page', {
-          title: new Text('Test'),
-        });
-        doc.addBlock('affine:surface', {}, pageBlockId);
-        const noteId = doc.addBlock('affine:note', {}, pageBlockId);
-        doc.addBlock('affine:paragraph', { text: new Text('Hello World!') }, noteId);
-      });
-    }
-  }
+  //   function createDoc() {
+  //     doc.load(() => {
+  //       const pageBlockId = doc.addBlock('affine:page', {
+  //         title: new Text('Test'),
+  //       });
+  //       doc.addBlock('affine:surface', {}, pageBlockId);
+  //       const noteId = doc.addBlock('affine:note', {}, pageBlockId);
+  //       doc.addBlock('affine:paragraph', { text: new Text('Hello World!') }, noteId);
+  //     });
+  //   }
+  // }
 
   codemirror() {
     const editor = new EditorView({

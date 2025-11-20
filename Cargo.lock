@@ -704,7 +704,7 @@ dependencies = [
  "bytes",
  "either",
  "flarch",
- "flmacro 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "flmacro",
  "log",
  "markdown-ppp",
  "num-bigfloat",
@@ -980,7 +980,9 @@ dependencies = [
 
 [[package]]
 name = "flarch"
-version = "0.10.1"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1f221c8d449a85bc412763ae5a2b05dfbfd7b9544d5a669003bd1f1fb017953"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -989,7 +991,7 @@ dependencies = [
  "chrono",
  "enum-display",
  "env_logger",
- "flmacro 0.10.0",
+ "flmacro",
  "futures",
  "js-sys",
  "log",
@@ -1011,15 +1013,6 @@ dependencies = [
  "wasmtimer",
  "web-sys",
  "webrtc",
-]
-
-[[package]]
-name = "flmacro"
-version = "0.10.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.106",
 ]
 
 [[package]]
