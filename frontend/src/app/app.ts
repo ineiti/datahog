@@ -3,10 +3,11 @@ import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { DataHogService } from './data-hog';
 import { TiptapComponent } from './view/tiptap/tiptap.component';
+import { EditorJSComponent } from './view/editorjs/editorjs.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TiptapComponent],
+  imports: [RouterOutlet, TiptapComponent, EditorJSComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

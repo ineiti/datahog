@@ -36,11 +36,11 @@ import { markdown } from '@codemirror/lang-markdown';
 import { BlockNoteEditor } from '@blocknote/core';
 
 // TipTap - Works great with Angular and has free slash commands!
-import { TipTapEditor } from './tiptap-editor';
+import { TipTapEditor } from './tip-tap/tiptap-editor';
 
 @Component({
   selector: 'view-basic',
-  // imports: [TipTapEditor],
+  imports: [TipTapEditor],
   templateUrl: './basic.html',
   styleUrl: './basic.scss',
 })
