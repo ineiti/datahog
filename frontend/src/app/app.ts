@@ -1,9 +1,8 @@
-// import { Basic } from './view/basic/basic';
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { DataHogService } from './data-hog';
-// import { TiptapComponent } from './view/tiptap/tiptap.component';
 import { nodemdComponent } from './view/node_md/nodemd.component';
+import { Node } from 'datahog-npm';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +12,7 @@ import { nodemdComponent } from './view/node_md/nodemd.component';
 })
 export class App {
   protected readonly title = signal('frontend');
+  protected readonly rootNode = signal<Node | null>(null);
 
   constructor(private dh: DataHogService) {}
 
@@ -23,6 +23,7 @@ export class App {
         res(true);
         this.dh.getNode(this.dh.rootNodeID).then((root) => {
           console.log(`got node ${this.dh.rootNodeID}: ${root}`);
+          this.rootNode.set(root);
         });
       });
     });
