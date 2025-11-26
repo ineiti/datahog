@@ -29,7 +29,8 @@ impl Storage {
         }
         let root = Node::label("Universe");
         db.insert(NodeID::zero(), root.id.as_ref())?;
-        db.insert(root.id.as_ref(), serde_yaml::to_vec(&root)?)?;
+        let buf = serde_yaml::to_string(&root)?;
+        db.insert(root.id.as_ref(), buf.as_bytes())?;
         Ok(root)
     }
 
@@ -51,16 +52,16 @@ impl Storage {
 
     pub async fn update_node(&self, node: Node) -> Result<(), BadRequest<String>> {
         let db = self.db.lock().await;
-        let buf = serde_yaml::to_vec(&node).map_err(|e| BadRequest(format!("{e:?}")))?;
-        db.insert(*node.id, buf)
+        let buf = serde_yaml::to_string(&node).map_err(|e| BadRequest(format!("{e:?}")))?;
+        db.insert(*node.id, buf.as_bytes())
             .map_err(|e| BadRequest(format!("{e:?}")))?;
         Ok(())
     }
 
     pub async fn update_edge(&self, edge: Edge) -> Result<(), BadRequest<String>> {
         let db = self.db.lock().await;
-        let buf = serde_yaml::to_vec(&edge).map_err(|e| BadRequest(format!("{e:?}")))?;
-        db.insert(*edge.id, buf)
+        let buf = serde_yaml::to_string(&edge).map_err(|e| BadRequest(format!("{e:?}")))?;
+        db.insert(*edge.id, buf.as_bytes())
             .map_err(|e| BadRequest(format!("{e:?}")))?;
         Ok(())
     }

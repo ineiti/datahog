@@ -50,7 +50,7 @@ pub struct Node {
     /// What functionality this node has - can never be changed
     pub kind: NodeKind,
     /// The label used to display the node on screen
-    pub label: String,
+    pub label_test: String,
     /// The version of this node's implementation, which is independant
     /// of the Node-version, handled by [VersionedSerde].
     /// This allows to have evolving interpretations of the edges and arguments

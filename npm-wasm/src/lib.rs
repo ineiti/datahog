@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use datahog::structs::{Edge, EdgeID, Node, NodeID};
+use datahog::structs::{BFContainer, BFRender, DataHash, Edge, EdgeID, Node, NodeID, NodeKind};
 use flarch::nodeids::U256;
 use flmacro::AsU256;
 use serde::{de::DeserializeOwned, Serialize};
@@ -51,20 +51,89 @@ impl EdgeWrapper {
     }
 }
 
-#[wasm_bindgen(js_name = Node)]
-pub struct NodeWrapper(Node);
+#[wasm_bindgen]
+pub struct NodeWrapper(i32);
 
-#[wasm_bindgen(js_class = Node)]
+#[wasm_bindgen]
 impl NodeWrapper {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        todo!()
+        NodeWrapper(2)
     }
 
     #[wasm_bindgen(getter)]
-    pub fn id(&self) -> NodeIDWrapper {
-        NodeIDWrapper(self.0.id.clone().into())
+    pub fn value(&self) -> i32 {
+        self.0
     }
+
+    //     #[wasm_bindgen]
+    //     pub fn init() -> Self {
+    //         NodeWrapper(Node::label("label"))
+    //     }
+
+    //     #[wasm_bindgen(getter)]
+    //     pub fn id(&self) -> NodeIDWrapper {
+    //         NodeIDWrapper(self.0.id.clone().into())
+    //     }
+
+    //     #[wasm_bindgen(getter)]
+    //     pub fn label(&self) -> String {
+    //         // self.0.label.clone()
+    //         format!("Label")
+    //     }
+
+    //     #[wasm_bindgen(getter)]
+    //     pub fn labels(&self) -> String {
+    //         // self.0.label.clone()
+    //         format!("Label")
+    //     }
+
+    //     #[wasm_bindgen]
+    //     pub fn set_label(&mut self, label: String) {
+    //         self.0.label_test = label;
+    //     }
+
+    //     #[wasm_bindgen(getter)]
+    //     pub fn kind(&self) -> String {
+    //         match &self.0.kind {
+    //             NodeKind::Render(bfr) => match bfr {
+    //                 BFRender::Markdown => "Render::Markdown",
+    //                 BFRender::Graph => "Render::Graph",
+    //                 BFRender::Tabular => "Render::Tabular",
+    //             },
+    //             NodeKind::Label => "Label",
+    //             NodeKind::Container(bfc) => match bfc {
+    //                 BFContainer::Formatted => "Container::Formatted",
+    //                 BFContainer::MimeType(t) => {
+    //                     return format!("Container::MimeType::{t}");
+    //                 }
+    //                 BFContainer::Schema => "Container::Schema",
+    //                 BFContainer::Concrete => "Container::Concrete",
+    //             },
+    //         }
+    //         .into()
+    //     }
+
+    //     #[wasm_bindgen(getter)]
+    //     pub fn data(&self) -> String {
+    //         match &self.0.data {
+    //             DataHash::Hash(u256) => format!("hash({u256})"),
+    //             DataHash::Bytes(bytes) => str::from_utf8(bytes.iter().as_slice())
+    //                 .unwrap_or("Invalid String".into())
+    //                 .into(),
+    //         }
+    //     }
+
+    //     #[wasm_bindgen(getter)]
+    //     pub fn something(&self) -> String {
+    //         format!("Something")
+    //     }
+
+    //     #[wasm_bindgen]
+    //     pub fn set_data(&mut self, data: String) {
+    //         self.0.data = DataHash::Bytes(data.into());
+    //     }
+    // }
 }
 
 #[wasm_bindgen]
@@ -77,18 +146,21 @@ pub struct Datahog {
 
 #[wasm_bindgen]
 impl Datahog {
-    pub async fn new(url: String) -> Result<Self, String> {
+    #[wasm_bindgen]
+    pub fn init(url: String) -> Self {
+        // pub fn init(url: String) -> Result<Self, String> {
         let mut dh = Self {
             url,
             root: NodeID::zero(),
             nodes: HashMap::new(),
             edges: HashMap::new(),
         };
-        let root: Node = dh.get("init").await?;
-        let root_id = root.id.clone();
-        dh.nodes.insert(root_id.clone(), root);
-        dh.root = root_id;
-        Ok(dh)
+        // let root: Node = dh.get("init").await?;
+        // let root_id = root.id.clone();
+        // dh.nodes.insert(root_id.clone(), root);
+        // dh.root = root_id;
+        // Ok(dh)
+        dh
     }
 
     #[wasm_bindgen(getter)]
@@ -96,53 +168,57 @@ impl Datahog {
         NodeIDWrapper(*self.root)
     }
 
-    pub async fn get_node(&mut self, id: NodeIDWrapper) -> Result<NodeWrapper, String> {
-        if let Some(node) = self.nodes.get(&(*id).into()) {
-            return Ok(NodeWrapper(node.clone()));
-        }
-        if let Some(node) = self.get(&format!("get_node?id={id:?}")).await? {
-            return Ok(NodeWrapper(node));
-        }
-        Err("No such node found".into())
-    }
+    // pub async fn get_node(&mut self) -> NodeWrapper {
+    //     NodeWrapper(2)
+    // }
 
-    pub async fn get_edge(&mut self, id: EdgeIDWrapper) -> Result<EdgeWrapper, String> {
-        if let Some(edge) = self.edges.get(&(*id).into()) {
-            return Ok(EdgeWrapper(edge.clone()));
-        }
-        if let Some(edge) = self.get(&format!("get_edge?id={id:?}")).await? {
-            return Ok(EdgeWrapper(edge));
-        }
-        Err("No such edge found".into())
-    }
+    // pub async fn get_node(&mut self, id: NodeIDWrapper) -> Result<NodeWrapper, String> {
+    //     // if let Some(node) = self.nodes.get(&(*id).into()) {
+    //     //     return Ok(NodeWrapper(node.clone()));
+    //     // }
+    //     // if let Some(node) = self.get(&format!("get_node?id={id:?}")).await? {
+    //     //     return Ok(NodeWrapper(node));
+    //     // }
+    //     Err("No such node found".into())
+    // }
 
-    pub async fn update_node(&mut self, node: NodeWrapper) -> Result<(), String> {
-        self.post("update_node", node.0).await?;
-        Ok(())
-    }
+    // pub async fn get_edge(&mut self, id: EdgeIDWrapper) -> Result<EdgeWrapper, String> {
+    //     if let Some(edge) = self.edges.get(&(*id).into()) {
+    //         return Ok(EdgeWrapper(edge.clone()));
+    //     }
+    //     if let Some(edge) = self.get(&format!("get_edge?id={id:?}")).await? {
+    //         return Ok(EdgeWrapper(edge));
+    //     }
+    //     Err("No such edge found".into())
+    // }
 
-    pub async fn update_edge(&mut self, edge: EdgeWrapper) -> Result<(), String> {
-        self.post("update_edge", edge.0).await?;
-        Ok(())
-    }
+    // pub async fn update_node(&mut self, node: NodeWrapper) -> Result<(), String> {
+    //     self.post("update_node", node.0).await?;
+    //     Ok(())
+    // }
 
-    async fn get<T: DeserializeOwned>(&mut self, api: &str) -> Result<T, String> {
-        reqwest::get(&format!("{}/{api}", self.url))
-            .await
-            .map_err(|e| format!("{e:?}"))?
-            .json::<T>()
-            .await
-            .map_err(|e| format!("{e:?}"))
-    }
+    // pub async fn update_edge(&mut self, edge: EdgeWrapper) -> Result<(), String> {
+    //     self.post("update_edge", edge.0).await?;
+    //     Ok(())
+    // }
 
-    async fn post<T: Serialize>(&mut self, api: &str, body: T) -> Result<(), String> {
-        let client = reqwest::Client::new();
-        client
-            .post(&format!("{}/{api}", self.url))
-            .json(&body)
-            .send()
-            .await
-            .map_err(|e| format!("{e:?}"))?;
-        Ok(())
-    }
+    // async fn get<T: DeserializeOwned>(&mut self, api: &str) -> Result<T, String> {
+    //     reqwest::get(&format!("{}/{api}", self.url))
+    //         .await
+    //         .map_err(|e| format!("{e:?}"))?
+    //         .json::<T>()
+    //         .await
+    //         .map_err(|e| format!("{e:?}"))
+    // }
+
+    // async fn post<T: Serialize>(&mut self, api: &str, body: T) -> Result<(), String> {
+    //     let client = reqwest::Client::new();
+    //     client
+    //         .post(&format!("{}/{api}", self.url))
+    //         .json(&body)
+    //         .send()
+    //         .await
+    //         .map_err(|e| format!("{e:?}"))?;
+    //     Ok(())
+    // }
 }

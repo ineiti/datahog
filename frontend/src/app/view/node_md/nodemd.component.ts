@@ -1,13 +1,14 @@
 import { Component, OnInit, OnDestroy, ElementRef, input } from '@angular/core';
 import EditorJS, {
-  OutputBlockData,
+  API,
+  BlockMutationEvent,
   OutputData,
   ToolConstructable,
   ToolSettings,
 } from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
-import { Node } from 'datahog-npm';
+// import { NodeW } from 'datahog-npm';
 
 @Component({
   selector: 'view-nodemd',
@@ -16,11 +17,11 @@ import { Node } from 'datahog-npm';
   styleUrl: './nodemd.component.scss',
 })
 export class nodemdComponent implements OnInit, OnDestroy {
-  node = input.required<Node>();
-  private editor_labels?: EditorJS;
-  private editor_is_a?: EditorJS;
-  private editor_contains?: EditorJS;
-  private editor_text?: EditorJS;
+  node = input.required<string>();
+  // node = input.required<NodeW>();
+  private editor_label?: EditorJS;
+  private editor_edges?: EditorJS;
+  private editor_data?: EditorJS;
 
   private static text_tools = {
     header: {
@@ -44,37 +45,63 @@ export class nodemdComponent implements OnInit, OnDestroy {
   constructor(private elementRef: ElementRef) {}
 
   async ngOnInit() {
-    this.editor_labels = await this.initializeEditor('#editor_labels');
-    this.editor_is_a = await this.initializeEditor('#editor_is_a');
-    this.editor_contains = await this.initializeEditor('#editor_contains');
-    this.editor_text = await this.initializeEditor('#editor_text', nodemdComponent.text_tools);
+    console.log(this.elementRef);
+    // console.log(this.node().label);
+    // console.log(this.node().labels);
+    // console.log(this.node().something);
+    this.editor_label = await this.initializeEditor(
+      '#editor_label',
+      // {
+      //   blocks: [{ type: 'paragraph', data: { text: this.node().labels } }],
+      // },
+      undefined,
+      undefined,
+      async (api, event) => {
+        console.log(event);
+        let data = await api.blocks.getBlockByIndex(0)?.save();
+        console.log(data);
+        // console.log(this.node().something);
+        // this.node().set_data(data!.data.text);
+      },
+    );
+    this.editor_edges = await this.initializeEditor('#editor_edges');
+    this.editor_data = await this.initializeEditor(
+      '#editor_data',
+      // {
+      //   blocks: [{ type: 'paragraph', data: { text: this.node().data } }],
+      // },
+      undefined,
+      nodemdComponent.text_tools,
+    );
   }
 
   ngOnDestroy() {
-    this.editor_labels?.destroy();
-    this.editor_is_a?.destroy();
-    this.editor_contains?.destroy();
-    this.editor_text?.destroy();
+    this.editor_label?.destroy();
+    this.editor_edges?.destroy();
+    this.editor_data?.destroy();
   }
 
   private async initializeEditor(
     selector: string,
+    data?: OutputData,
     tools?: { [toolName: string]: ToolConstructable | ToolSettings },
+    onChange?: (api: API, event: BlockMutationEvent | BlockMutationEvent[]) => Promise<void>,
   ): Promise<EditorJS | undefined> {
     const holder = this.elementRef.nativeElement.querySelector(selector);
     if (!holder) {
-      console.error('Editor element not found');
+      console.error(`Editor element ${selector} not found`);
       return undefined;
     }
 
     return new Promise((resolve) => {
       const editor = new EditorJS({
         holder,
+        data,
         placeholder: `Start adding a ${selector}`,
         tools,
         minHeight: 0,
 
-        onChange: async (api, event) => {},
+        onChange,
 
         onReady: async () => {
           resolve(editor);
