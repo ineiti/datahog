@@ -8,7 +8,7 @@ import EditorJS, {
 } from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
-// import { NodeW } from 'datahog-npm';
+import { Node } from 'datahog-npm';
 
 @Component({
   selector: 'view-nodemd',
@@ -17,8 +17,7 @@ import List from '@editorjs/list';
   styleUrl: './nodemd.component.scss',
 })
 export class nodemdComponent implements OnInit, OnDestroy {
-  node = input.required<string>();
-  // node = input.required<NodeW>();
+  node = input.required<Node>();
   private editor_label?: EditorJS;
   private editor_edges?: EditorJS;
   private editor_data?: EditorJS;
@@ -46,31 +45,25 @@ export class nodemdComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     console.log(this.elementRef);
-    // console.log(this.node().label);
-    // console.log(this.node().labels);
-    // console.log(this.node().something);
     this.editor_label = await this.initializeEditor(
       '#editor_label',
-      // {
-      //   blocks: [{ type: 'paragraph', data: { text: this.node().labels } }],
-      // },
-      undefined,
+      {
+        blocks: [{ type: 'paragraph', data: { text: this.node().label } }],
+      },
       undefined,
       async (api, event) => {
         console.log(event);
         let data = await api.blocks.getBlockByIndex(0)?.save();
         console.log(data);
-        // console.log(this.node().something);
-        // this.node().set_data(data!.data.text);
+        this.node().set_data(data!.data.text);
       },
     );
     this.editor_edges = await this.initializeEditor('#editor_edges');
     this.editor_data = await this.initializeEditor(
       '#editor_data',
-      // {
-      //   blocks: [{ type: 'paragraph', data: { text: this.node().data } }],
-      // },
-      undefined,
+      {
+        blocks: [{ type: 'paragraph', data: { text: this.node().data } }],
+      },
       nodemdComponent.text_tools,
     );
   }

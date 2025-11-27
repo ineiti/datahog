@@ -18,7 +18,8 @@ markdown-ppp = "2.7.1"
 num-bigfloat = { version = "1", features = ["rand", "serde"] }
 num-bigint = { version = "0.4", features = ["rand", "serde"] }
 rand = { version = "0.8", features = ["serde"] }
-serde = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_with = { version = "3", features = ["hex", "json", "base64"] }
 sha2 = "0.10"
 tokio = { version = "1", features = [] }
 wasm-bindgen = { version = "*" }

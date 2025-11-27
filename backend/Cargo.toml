@@ -9,6 +9,7 @@ edition = "2021"
 datahog = { path = "../datahog" }
 
 anyhow = "1"
+bincode = {version = "2", features = ["serde"]}
 hex = "0.4"
 log = "0.4"
 markdown-ppp = "2.7.1"
