@@ -593,6 +593,7 @@ dependencies = [
  "log",
  "reqwest",
  "serde",
+ "serde_json",
  "tokio",
  "urlencoding",
  "wasm-bindgen",

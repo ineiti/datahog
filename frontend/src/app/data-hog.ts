@@ -12,10 +12,20 @@ export class DataHogService {
   constructor() {
     const url = new URL('datahog_npm_bg.wasm', import.meta.url);
     init(url).then(() => {
-      Datahog.init('http://localhost:8000/api/v1').then((dh) => {
-        this._dh = dh;
-        this.done.next();
-      });
+      Datahog.init('http://localhost:8000/api/v1')
+        .then((dh) => {
+          this._dh = dh;
+          this._dh.get_node(this._dh.root_id).then((node) => {
+            console.log(`Updating node ${node.to_string()} with ${this._dh}`);
+            this._dh?.update_node(node);
+          });
+          this.done.next();
+        })
+        .catch((e) => {
+          console.error(`Couldn't connect to backend: ${e}`);
+          this._dh = Datahog.init_local();
+          this.done.next();
+        });
     });
   }
 
@@ -32,6 +42,7 @@ export class DataHogService {
   }
 
   async updateNode(node: Node) {
+    console.log(`Updating node ${node} with ${this._dh}`);
     await this._dh?.update_node(node);
   }
 

@@ -9,6 +9,7 @@ import EditorJS, {
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
 import { Node } from 'datahog-npm';
+import { DataHogService } from '../../data-hog';
 
 @Component({
   selector: 'view-nodemd',
@@ -41,7 +42,10 @@ export class nodemdComponent implements OnInit, OnDestroy {
     },
   };
 
-  constructor(private elementRef: ElementRef) {}
+  constructor(
+    private elementRef: ElementRef,
+    private dh: DataHogService,
+  ) {}
 
   async ngOnInit() {
     console.log(this.elementRef);
@@ -51,11 +55,10 @@ export class nodemdComponent implements OnInit, OnDestroy {
         blocks: [{ type: 'paragraph', data: { text: this.node().label } }],
       },
       undefined,
-      async (api, event) => {
-        console.log(event);
+      async (api, _) => {
         let data = await api.blocks.getBlockByIndex(0)?.save();
-        console.log(data);
-        this.node().set_data(data!.data.text);
+        this.node().set_label(data!.data.text);
+        await this.dh.updateNode(this.node());
       },
     );
     this.editor_edges = await this.initializeEditor('#editor_edges');
@@ -65,6 +68,10 @@ export class nodemdComponent implements OnInit, OnDestroy {
         blocks: [{ type: 'paragraph', data: { text: this.node().data } }],
       },
       nodemdComponent.text_tools,
+      async (api, _) => {
+        let data = await api.blocks.getBlockByIndex(0)?.save();
+        this.node().set_data(data!.data.text);
+      },
     );
   }
 

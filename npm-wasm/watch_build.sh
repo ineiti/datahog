@@ -1,1 +1,6 @@
-while clear; date; do wasm-pack build -t web; fswatch -1 src; done
+while clear; do 
+  date
+  wasm-pack build -t web -d pkg.new
+  cp -a pkg.new/* pkg
+  fswatch -1 src
+done

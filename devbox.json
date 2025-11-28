@@ -15,7 +15,9 @@
       "alias ls='ls --color'",
       "PATH=$PATH:$PWD/frontend/node_modules/.bin"
     ],
-    "scripts": {}
+    "scripts": {
+      "wasm-build-watch": "cd npm-wasm && ./watch_build.sh"
+    }
   },
   "env": {
     "LS_COLORS": "di=33",

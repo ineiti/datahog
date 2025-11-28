@@ -120,7 +120,7 @@ impl<RW: Reader + Writer + std::fmt::Debug + Sync + Send> SourceDisk<RW> {
         content: String,
     ) -> anyhow::Result<Vec<Transaction>> {
         let mut file_node = Node::container(BFContainer::MimeType("text/plain".to_string()));
-        file_node.label_test = file_name.to_string();
+        file_node.label = file_name.to_string();
         file_node.data = DataHash::Bytes(Bytes::from(content));
 
         let edge = Edge::contains(parent.clone(), file_node.id.clone());

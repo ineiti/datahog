@@ -16,7 +16,7 @@ impl Node {
     pub fn label(label: &str) -> Self {
         Self {
             id: NodeID::rnd(),
-            label_test: label.to_string(),
+            label: label.to_string(),
             data: DataHash::Bytes(Bytes::new()),
             arguments: Default::default(),
             op_version: 0,
@@ -30,7 +30,7 @@ impl Node {
     pub fn container(container: BFContainer) -> Self {
         Self {
             id: NodeID::rnd(),
-            label_test: "container".to_string(),
+            label: "container".to_string(),
             data: DataHash::Bytes(Bytes::new()),
             arguments: Default::default(),
             op_version: 0,
@@ -42,7 +42,7 @@ impl Node {
 
     pub fn update(&mut self, update: NodeUpdate) {
         match update {
-            NodeUpdate::Label(l) => self.label_test = l,
+            NodeUpdate::Label(l) => self.label = l,
             NodeUpdate::Data(b) => self.data = DataHash::Bytes(b),
             NodeUpdate::SetArgument(k, v) => {
                 self.arguments.insert(k, v);
