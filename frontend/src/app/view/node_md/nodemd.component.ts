@@ -48,7 +48,6 @@ export class nodemdComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit() {
-    console.log(this.elementRef);
     this.editor_label = await this.initializeEditor(
       '#editor_label',
       {
@@ -71,6 +70,7 @@ export class nodemdComponent implements OnInit, OnDestroy {
       async (api, _) => {
         let data = await api.blocks.getBlockByIndex(0)?.save();
         this.node().set_data(data!.data.text);
+        await this.dh.updateNode(this.node());
       },
     );
   }

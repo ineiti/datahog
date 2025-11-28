@@ -7,7 +7,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use wasm_bindgen::prelude::*;
 
 use datahog::structs::Transaction;
-use web_sys::{window, Storage};
+use web_sys::{console, window, Storage};
 
 #[wasm_bindgen(js_name = NodeID)]
 #[derive(AsU256)]
@@ -136,32 +136,40 @@ impl Datahog {
             nodes: HashMap::new(),
             edges: HashMap::new(),
         };
-        let root: Node = dh
-            .get::<Node>("node", *NodeID::zero())
-            .await?
-            .ok_or(format!("Didn't get root node"))?;
-        let root_id = root.id.clone();
-        dh.nodes.insert(root_id.clone(), root);
-        dh.root = root_id;
+        dh.init_root().await?;
         Ok(dh)
     }
 
-    pub fn init_local() -> Result<Self, String> {
+    pub async fn init_local() -> Result<Self, String> {
         let storage = window()
             .ok_or(format!("Couldn't get window"))?
             .local_storage()
             .map_err(|e| format!("Couldn't get local_storage: {e:?}"))?
             .ok_or(format!("Local storage was empty"))?;
 
-        let root = Node::label("Universe_local");
         let mut dh = Self {
             backend: Backend::Local(storage),
-            root: root.id.clone(),
+            root: NodeID::zero(),
             nodes: HashMap::new(),
             edges: HashMap::new(),
         };
-        dh.nodes.insert(root.id.clone(), root);
+        if let Err(e) = dh.init_root().await {
+            let root = Node::label("Universe_local");
+            dh.update_node(&NodeWrapper(root.clone())).await?;
+            dh.put("node", U256::zero(), &root).await?;
+            dh.root = root.id.clone();
+        }
         Ok(dh)
+    }
+
+    async fn init_root(&mut self) -> Result<(), String> {
+        let root_base = self.get_node(&NodeIDWrapper(*NodeID::zero())).await?.0;
+        self.nodes.clear();
+        let root = self.get_node(&NodeIDWrapper(*root_base.id)).await?.0;
+        let root_id = root.id.clone();
+        self.nodes.insert(root_id.clone(), root);
+        self.root = root_id;
+        Ok(())
     }
 
     #[wasm_bindgen(getter)]
@@ -169,8 +177,8 @@ impl Datahog {
         NodeIDWrapper(*self.root)
     }
 
-    pub async fn get_node(&mut self, id: NodeIDWrapper) -> Result<NodeWrapper, String> {
-        if let Some(node) = self.nodes.get(&(*id).into()) {
+    pub async fn get_node(&mut self, id: &NodeIDWrapper) -> Result<NodeWrapper, String> {
+        if let Some(node) = self.nodes.get(&(**id).into()) {
             return Ok(NodeWrapper(node.clone()));
         }
         if let Some(node) = self.get::<Node>("node", id.0).await? {
@@ -180,8 +188,8 @@ impl Datahog {
         Err("No such node found".into())
     }
 
-    pub async fn get_edge(&mut self, id: EdgeIDWrapper) -> Result<EdgeWrapper, String> {
-        if let Some(edge) = self.edges.get(&(*id).into()) {
+    pub async fn get_edge(&mut self, id: &EdgeIDWrapper) -> Result<EdgeWrapper, String> {
+        if let Some(edge) = self.edges.get(&(**id).into()) {
             return Ok(EdgeWrapper(edge.clone()));
         }
 
@@ -193,15 +201,15 @@ impl Datahog {
         Err("No such edge found".into())
     }
 
-    pub async fn update_node(&mut self, node: NodeWrapper) -> Result<(), String> {
+    pub async fn update_node(&mut self, node: &NodeWrapper) -> Result<(), String> {
         self.nodes.insert(node.0.id.clone(), node.0.clone());
-        self.put("node", *node.0.id.clone(), node.0).await?;
+        self.put("node", *node.0.id.clone(), &node.0).await?;
         Ok(())
     }
 
-    pub async fn update_edge(&mut self, edge: EdgeWrapper) -> Result<(), String> {
+    pub async fn update_edge(&mut self, edge: &EdgeWrapper) -> Result<(), String> {
         self.edges.insert(edge.0.id.clone(), edge.0.clone());
-        self.put("edge", *edge.0.id.clone(), edge.0).await?;
+        self.put("edge", *edge.0.id.clone(), &edge.0).await?;
         Ok(())
     }
 
@@ -217,21 +225,22 @@ impl Datahog {
                 .get_item(&format!("{id:?}"))
                 .map_err(|e| format!("Storage error: {e:?}"))?
             {
-                Some(s) => {
-                    serde_json::from_str(&s).map_err(|e| format!("Deserialization error: {e:?}"))?
-                }
+                Some(s) => Ok(Some(
+                    serde_json::from_str(&s)
+                        .map_err(|e| format!("Deserialization error: {e:?}"))?,
+                )),
                 None => Ok(None),
             },
         }
     }
 
-    async fn put<T: Serialize>(&mut self, api: &str, id: U256, body: T) -> Result<(), String> {
+    async fn put<T: Serialize>(&mut self, api: &str, id: U256, body: &T) -> Result<(), String> {
         match &self.backend {
             Backend::URL(url) => {
                 let client = reqwest::Client::new();
                 client
                     .post(format!("{url}/update_{api}"))
-                    .json(&body)
+                    .json(body)
                     .send()
                     .await
                     .map_err(|e| format!("HTTP::POST error: {e:?}"))?;
@@ -239,11 +248,29 @@ impl Datahog {
             Backend::Local(storage) => storage
                 .set(
                     &format!("{id:?}"),
-                    &serde_json::to_string(&body)
+                    &serde_json::to_string(body)
                         .map_err(|e| format!("Serialization error: {e:?}"))?,
                 )
                 .map_err(|e| format!("Storage error: {e:?}"))?,
         }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::error::Error;
+
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    use super::*;
+
+    #[wasm_bindgen_test]
+    fn test_serde_node() -> Result<(), Box<dyn Error>> {
+        let node = Node::label("test");
+        let node_str = serde_json::to_string(&node)?;
+        let node_copy = serde_json::from_str(&node_str)?;
+        assert_eq!(node, node_copy);
         Ok(())
     }
 }

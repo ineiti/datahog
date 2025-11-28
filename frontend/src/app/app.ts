@@ -22,7 +22,7 @@ export class App {
         console.log('Initialized dh');
         res(true);
         this.dh.getNode(this.dh.rootNodeID).then((root) => {
-          console.log(`got node ${this.dh.rootNodeID}: ${root}`);
+          console.log(`Root node is: ${root.to_string()}`);
           this.rootNode.set(root);
         });
       });

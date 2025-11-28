@@ -16,7 +16,7 @@
       "PATH=$PATH:$PWD/frontend/node_modules/.bin"
     ],
     "scripts": {
-      "wasm-build-watch": "cd npm-wasm && ./watch_build.sh"
+      "wasm-build": "cd npm-wasm && ./watch_build.sh"
     }
   },
   "env": {
