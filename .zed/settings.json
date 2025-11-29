@@ -6,7 +6,13 @@
   "lsp": {
     "rust-analyzer": {
       "initialization_options": {
-        "linkedProjects": ["./Cargo.toml", "./npm-wasm/Cargo.toml"]
+        "linkedProjects": ["./Cargo.toml", "./npm-wasm/Cargo.toml"],
+        "check": {
+          "allTargets": true
+        },
+        "cargo": {
+          "allTargets": true
+        }
       }
     }
   }

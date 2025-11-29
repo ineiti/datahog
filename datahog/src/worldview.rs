@@ -7,7 +7,7 @@ use anyhow::Result;
 use std::collections::HashMap;
 
 use crate::structs::{
-    Edge, EdgeID, Node, NodeID, Record, RecordEvent, Source, SourceID, Transaction,
+    Edge, EdgeID, EdgeKind, Node, NodeID, Record, RecordEvent, Source, SourceID, Transaction,
 };
 
 #[derive(Debug)]
@@ -141,17 +141,18 @@ impl WorldView {
 
     fn remove_edge_from_nodes(&mut self, re: &RecordEvent, edge: &Edge) {
         for node in match &edge.kind {
-            crate::structs::EdgeKind::Equality(_node_ids) => {
+            EdgeKind::Equality(_node_ids) => {
                 todo!()
             }
-            crate::structs::EdgeKind::Definition { object, label } => vec![object, label],
-            crate::structs::EdgeKind::Using { client, object } => vec![client, object],
-            crate::structs::EdgeKind::Contains { container, object } => {
+            EdgeKind::Definition { object, label } => vec![object, label],
+            EdgeKind::Using { client, object } => vec![client, object],
+            EdgeKind::Contains { container, object } => {
                 vec![container, object]
             }
+            _ => todo!(),
         } {
             if let Some(node) = self.nodes.get_mut(node) {
-                node.edges.remove(&edge.id);
+                node.edges.retain(|e| e.id != edge.id);
                 node.history.push(re.clone());
             }
         }
@@ -159,17 +160,19 @@ impl WorldView {
 
     fn apply_edge_to_nodes(&mut self, re: &RecordEvent, edge: &Edge) {
         for node in match &edge.kind {
-            crate::structs::EdgeKind::Equality(_node_ids) => {
+            EdgeKind::Equality(_node_ids) => {
                 todo!()
             }
-            crate::structs::EdgeKind::Definition { object, label } => vec![object, label],
-            crate::structs::EdgeKind::Using { client, object } => vec![client, object],
-            crate::structs::EdgeKind::Contains { container, object } => {
+            EdgeKind::Definition { object, label } => vec![object, label],
+            EdgeKind::Using { client, object } => vec![client, object],
+            EdgeKind::Contains { container, object } => {
                 vec![container, object]
             }
+            _ => todo!(),
         } {
             if let Some(node) = self.nodes.get_mut(node) {
-                node.edges.insert(edge.id.clone(), edge.kind.clone());
+                // TODO: fix this
+                node.edges.insert(0, edge.clone());
                 if let Some(history) = node.history.last_mut() {
                     if history != re {
                         node.history.push(re.clone());

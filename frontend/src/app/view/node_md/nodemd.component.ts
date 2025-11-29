@@ -2,13 +2,14 @@ import { Component, OnInit, OnDestroy, ElementRef, input } from '@angular/core';
 import EditorJS, {
   API,
   BlockMutationEvent,
+  OutputBlockData,
   OutputData,
   ToolConstructable,
   ToolSettings,
 } from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
-import { Node } from 'datahog-npm';
+import { DataNode, Node } from 'datahog-npm';
 import { DataHogService } from '../../data-hog';
 
 @Component({
@@ -56,7 +57,7 @@ export class nodemdComponent implements OnInit, OnDestroy {
       undefined,
       async (api, _) => {
         let data = await api.blocks.getBlockByIndex(0)?.save();
-        this.node().set_label(data!.data.text);
+        this.node().label = data!.data.text;
         await this.dh.updateNode(this.node());
       },
     );
@@ -64,15 +65,39 @@ export class nodemdComponent implements OnInit, OnDestroy {
     this.editor_data = await this.initializeEditor(
       '#editor_data',
       {
-        blocks: [{ type: 'paragraph', data: { text: this.node().data } }],
+        blocks: nodemdComponent.dataNodeToBlocks(this.node().dataNode),
       },
       nodemdComponent.text_tools,
       async (api, _) => {
-        let data = await api.blocks.getBlockByIndex(0)?.save();
-        this.node().set_data(data!.data.text);
+        const blocks = (await api.saver.save()).blocks;
+        const dn = nodemdComponent.blocksToDataNode(blocks);
+        console.log(dn.data);
+        this.node().dataNode = dn;
         await this.dh.updateNode(this.node());
       },
     );
+  }
+
+  static blocksToDataNode(blocks: OutputBlockData[]): DataNode {
+    const block = blocks.shift();
+    if (block === undefined) {
+      return new DataNode('empty');
+    }
+    const dn = new DataNode(`${JSON.stringify(block)}`);
+    if (blocks.length > 0) {
+      dn.set_sibling(nodemdComponent.blocksToDataNode(blocks));
+    }
+    return dn;
+  }
+
+  static dataNodeToBlocks(dn: DataNode): OutputBlockData[] {
+    const bds = dn.sibling.length > 0 ? nodemdComponent.dataNodeToBlocks(dn.sibling[0]) : [];
+    let bd = JSON.parse(dn.data);
+    if (bd.id === undefined || bd.type === undefined || bd.data === undefined) {
+      bd = { type: 'paragraph', data: { text: dn.data } };
+    }
+    bds.unshift(bd);
+    return bds;
   }
 
   ngOnDestroy() {

@@ -1,6 +1,3 @@
-[build]
-target-dir = "./target-common"
-
 [patch.crates-io]
 # flarch = { path= "../fledger/flarch" }
 # flmacro = { path= "../fledger/flmacro" }

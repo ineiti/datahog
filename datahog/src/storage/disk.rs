@@ -16,7 +16,7 @@ use bytes::Bytes;
 
 use crate::{
     storage::dir_trait::{DirectoryEntry, Reader, Writer},
-    structs::{BFContainer, DataHash, Edge, Node, NodeID, Source, SourceID, Transaction},
+    structs::{DataBlob, Edge, Node, NodeID, Source, SourceID, Transaction},
 };
 
 #[derive(Debug)]
@@ -119,9 +119,10 @@ impl<RW: Reader + Writer + std::fmt::Debug + Sync + Send> SourceDisk<RW> {
         file_name: String,
         content: String,
     ) -> anyhow::Result<Vec<Transaction>> {
-        let mut file_node = Node::container(BFContainer::MimeType("text/plain".to_string()));
-        file_node.label = file_name.to_string();
-        file_node.data = DataHash::Bytes(Bytes::from(content));
+        let mut file_node = Node::mime("text/plain".into(), file_name.into());
+        file_node
+            .data_blob
+            .insert(0, DataBlob::Bytes(Bytes::from(content)));
 
         let edge = Edge::contains(parent.clone(), file_node.id.clone());
         Ok(vec![

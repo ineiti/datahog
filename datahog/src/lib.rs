@@ -4,4 +4,5 @@
 pub mod impls;
 pub mod storage;
 pub mod structs;
+pub mod views;
 pub mod worldview;

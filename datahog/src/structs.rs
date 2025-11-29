@@ -38,9 +38,6 @@ pub struct Transaction {
 /// In addition to this, each [Node] can have zero or more [Edge]s to other
 /// [Node]s to indicate relationships.
 ///
-/// [Argument]s allow the [Node] to hold changeable data to be used by the
-/// [NodeKind], or the [Node::data].
-///
 /// Finally, the [Node::history] is a filtered list of all [Transaction]s
 /// used to build this [Node] version.
 #[derive(VersionedSerde, Clone, PartialEq, Eq, Debug)]
@@ -53,27 +50,52 @@ pub struct Node {
     pub label: String,
     /// The version of this node's implementation, which is independant
     /// of the Node-version, handled by [VersionedSerde].
-    /// This allows to have evolving interpretations of the edges and arguments
+    /// This allows to have evolving interpretations of the edges and data
     /// of a Node.
     pub op_version: OpVersion,
-    /// Data specific to this node
-    pub data: DataHash,
+    /// Data-blobs have an ID, so they can be referenced from the outside.
+    pub data_blob: HashMap<u32, DataBlob>,
+    /// Data-view describes how the blobs are linked hierarchically.
+    pub data_view: DataView,
     /// Edges to other nodes
-    pub edges: HashMap<EdgeID, EdgeKind>,
-    /// Arguments used in this node, can be used in Node.data or by the implementation.
-    pub arguments: HashMap<String, Argument>,
+    pub edges: Vec<Edge>,
     /// The full history of this node
     pub history: Vec<RecordEvent>,
 }
 
-/// A [DataHash] represents either the hash of an object, if it is too
-/// big to be stored in memory, or the bytes of the object itself.
+/// A [DataBlob] is the fundamental part in a [Node] and represents a part
+/// of its data.
+/// A [Node] can have 0 or more [DataBlob]s.
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
-pub enum DataHash {
+pub enum DataBlob {
     /// A sha256 hash of the object.
     Hash(U256),
     /// The bytes of the object.
     Bytes(Bytes),
+    /// A string representation, usually text
+    Text(String),
+    /// Element of `Z`.
+    Int(BigInt),
+    /// Element of `R`.
+    Float(BigFloat),
+    /// Insert this [Edge]
+    Edge(Edge),
+    /// Implements a schema
+    Schema(NodeID, Vec<DataBlob>),
+    /// An entry with arguments
+    Entry(String, HashMap<String, DataBlob>),
+}
+
+/// A [DataView] points to the index of a [DataBlob] and has an optional
+/// child and an optional sibling (next blob).
+#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
+pub struct DataView {
+    /// The index of the [DataBlob] this [DataView] points to.
+    pub index: u32,
+    /// The child [DataView] of this [DataView].
+    pub child: Option<Box<DataView>>,
+    /// The sibling [DataView] of this [DataView].
+    pub sibling: Option<Box<DataView>>,
 }
 
 /// An [Edge] is a connection between two or more [Node]s.
@@ -102,62 +124,13 @@ pub struct RecordEvent(pub Timestamp, pub Record);
 /// If there are too few, it will be difficult to use them in all circumstances.
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum NodeKind {
-    /// Nodes to render data - either on screen or disk
-    Render(BFRender),
     /// Label node used to categorize other nodes.
     Label,
-    /// Data holding nodes
-    Container(BFContainer),
-}
-
-/// How [Node]s and [Edge]s linked to this node are rendered.
-/// This list will evolve over time, and things like a `Html`
-/// renderer might come at a later moment.
-/// TODO: define which [Node]s are displayed for each of the
-/// Renderers.
-#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
-pub enum BFRender {
-    /// This renderer interprets the [Node::data] as an md file
-    /// and includes also other [Node]s linked to it.
-    /// TODO: how other [Node]s are rendered depending on their kind
-    /// of links.
-    Markdown,
-    /// A generic renderer allowing to re-arrange [Node]s and their
-    /// [Edge]s.
-    Graph,
-    /// Show the data of the node in a table, akin to a spreadsheet.
-    Tabular,
-}
-
-/// What type of data a [Node] holds. This is used by other [Node]s to
-/// point to common data.
-/// TODO: which data is stored in which place? There are the [Node::data],
-/// [Node::arguments], and the [NodeKind::Container].
-#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
-pub enum BFContainer {
-    /// ???
-    Formatted,
     /// Any type of data potentially represented as a file.
     MimeType(String),
     /// Like a database schema, defines fields which need to be filled
     /// by each [Node] being part of the schema.
     Schema,
-    /// ???
-    Concrete,
-}
-
-/// An argument to a [Node] which is used in its [Node::data] field.
-#[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
-pub enum Argument {
-    /// Points to another [Node]
-    /// TODO: why isn't this an [Edge]?
-    ID(NodeID),
-    /// Generic string.
-    String(String),
-    /// Element of `Z`.
-    Int(BigInt),
-    /// Element of `R`.
-    Float(BigFloat),
 }
 
 pub type RecordCUDNode = RecordCUD<NodeID, Node, NodeUpdate>;
@@ -199,9 +172,9 @@ pub enum Validity {
 #[derive(Clone, PartialEq, Eq, Debug, Deserialize, Serialize)]
 pub enum NodeUpdate {
     Label(String),
-    Data(Bytes),
-    SetArgument(String, Argument),
-    RemoveArgument(String),
+    DataBlob(u32, DataBlob),
+    DataBlobRemove(u32),
+    DataView(DataView),
     Migrate(OpVersion, Vec<NodeUpdate>),
     Delete,
 }
@@ -233,6 +206,9 @@ pub enum EdgeKind {
     Using { client: NodeID, object: NodeID },
     /// A [EdgeKind::Contains] edge connects a [Node] as a _container_ to a [Node] as an _object_.
     Contains { container: NodeID, object: NodeID },
+    /// A [EdgeKind::Reference] allows the user to find another node which is linked
+    /// in some kind of way.
+    Reference { dest: NodeID, blob: Option<u32> },
 }
 
 /// The ID of a [Node] - should be globally unique.

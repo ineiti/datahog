@@ -1,13 +1,16 @@
 use std::collections::HashMap;
 
-use datahog::structs::{BFContainer, BFRender, DataHash, Edge, EdgeID, Node, NodeID, NodeKind};
+pub use datahog::{
+    structs::{Edge, EdgeID, Node, NodeID, NodeKind},
+    views::DataNode,
+};
 use flarch::nodeids::U256;
 use flmacro::AsU256;
 use serde::{de::DeserializeOwned, Serialize};
 use wasm_bindgen::prelude::*;
 
 use datahog::structs::Transaction;
-use web_sys::{console, window, Storage};
+use web_sys::{window, Storage};
 
 #[wasm_bindgen(js_name = NodeID)]
 #[derive(AsU256)]
@@ -62,50 +65,34 @@ impl NodeWrapper {
         NodeIDWrapper(self.0.id.clone().into())
     }
 
-    #[wasm_bindgen(getter)]
-    pub fn label(&self) -> String {
+    #[wasm_bindgen(getter, js_name = "label")]
+    pub fn label_get(&self) -> String {
         self.0.label.clone()
     }
 
-    #[wasm_bindgen]
-    pub fn set_label(&mut self, label: String) {
+    #[wasm_bindgen(setter, js_name = "label")]
+    pub fn label_set(&mut self, label: String) {
         self.0.label = label;
     }
 
     #[wasm_bindgen(getter)]
     pub fn kind(&self) -> String {
         match &self.0.kind {
-            NodeKind::Render(bfr) => match bfr {
-                BFRender::Markdown => "Render::Markdown",
-                BFRender::Graph => "Render::Graph",
-                BFRender::Tabular => "Render::Tabular",
-            },
+            NodeKind::Schema => "Schema",
             NodeKind::Label => "Label",
-            NodeKind::Container(bfc) => match bfc {
-                BFContainer::Formatted => "Container::Formatted",
-                BFContainer::MimeType(t) => {
-                    return format!("Container::MimeType::{t}");
-                }
-                BFContainer::Schema => "Container::Schema",
-                BFContainer::Concrete => "Container::Concrete",
-            },
+            NodeKind::MimeType(mt) => return format!("MimeType({mt})"),
         }
         .into()
     }
 
-    #[wasm_bindgen(getter)]
-    pub fn data(&self) -> String {
-        match &self.0.data {
-            DataHash::Hash(u256) => format!("hash({u256})"),
-            DataHash::Bytes(bytes) => str::from_utf8(bytes.iter().as_slice())
-                .unwrap_or("Invalid String".into())
-                .into(),
-        }
+    #[wasm_bindgen(getter, js_name = "dataNode")]
+    pub fn data_node_get(&self) -> DataNode {
+        self.0.view_data_node_get()
     }
 
-    #[wasm_bindgen]
-    pub fn set_data(&mut self, data: String) {
-        self.0.data = DataHash::Bytes(data.into());
+    #[wasm_bindgen(setter, js_name = "dataNode")]
+    pub fn data_node_set(&mut self, dn: &DataNode) {
+        self.0.view_data_node_set(dn);
     }
 
     #[wasm_bindgen]
@@ -153,7 +140,7 @@ impl Datahog {
             nodes: HashMap::new(),
             edges: HashMap::new(),
         };
-        if let Err(e) = dh.init_root().await {
+        if dh.init_root().await.is_err() {
             let root = Node::label("Universe_local");
             dh.update_node(&NodeWrapper(root.clone())).await?;
             dh.put("node", U256::zero(), &root).await?;

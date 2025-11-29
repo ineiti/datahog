@@ -19,10 +19,8 @@ export class App {
   async ngOnInit() {
     return new Promise((res) => {
       this.dh.done.subscribe(() => {
-        console.log('Initialized dh');
         res(true);
         this.dh.getNode(this.dh.rootNodeID).then((root) => {
-          console.log(`Root node is: ${root.to_string()}`);
           this.rootNode.set(root);
         });
       });

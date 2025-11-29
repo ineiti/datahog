@@ -9,9 +9,7 @@ async-recursion = "1.1.1"
 async-trait = "0.1"
 bytes = { version = "1", features = ["serde"] }
 either = {version = "1.15.0", features = ["serde"]}
-# flarch = { version = "0.10", features = ["node"] }
 flarch = { version = "0.10" }
-# flarch = { version = "0.10", path="../../../ineiti/fledger/flarch" }
 flmacro = "0.10"
 log = "0.4.28"
 markdown-ppp = "2.7.1"
@@ -22,8 +20,6 @@ serde = { version = "1.0", features = ["derive"] }
 serde_with = { version = "3", features = ["hex", "json", "base64"] }
 sha2 = "0.10"
 tokio = { version = "1", features = [] }
-wasm-bindgen = { version = "*" }
-serde-wasm-bindgen = { version = "0.6", optional = true }
 
-[features]
-wasm = ["serde-wasm-bindgen"]
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { version = "0.2" }

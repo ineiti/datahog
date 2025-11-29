@@ -18,8 +18,8 @@ export class DataHogService {
     await init(url);
     try {
       this._dh = await Datahog.init('http://localhost:8000/api/v1');
-    } catch (e) {
-      console.error(`Couldn't connect to backend: ${e}`);
+    } catch (_) {
+      console.warn(`Couldn't connect to backend - using localstorage`);
       this._dh = await Datahog.init_local();
     }
     this.done.next();

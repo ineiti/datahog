@@ -726,7 +726,6 @@ dependencies = [
  "num-bigint",
  "rand 0.8.5",
  "serde",
- "serde-wasm-bindgen",
  "serde_with",
  "sha2",
  "tokio",
