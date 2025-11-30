@@ -1,4 +1,12 @@
-import { Component, OnInit, OnDestroy, ElementRef, input, HostListener } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ElementRef,
+  input,
+  HostListener,
+  ViewChild,
+} from '@angular/core';
 import EditorJS, {
   API,
   BlockMutationEvent,
@@ -11,10 +19,13 @@ import Header from '@editorjs/header';
 import List from '@editorjs/list';
 import { DataNode, Node } from 'datahog-npm';
 import { DataHogService } from '../../data-hog';
+import { ContextMenu } from 'primeng/contextmenu';
+import { MenuItem } from 'primeng/api';
 
 @Component({
   selector: 'view-nodemd',
   standalone: true,
+  imports: [ContextMenu],
   templateUrl: './nodemd.component.html',
   styleUrl: './nodemd.component.scss',
 })
@@ -23,6 +34,8 @@ export class nodemdComponent implements OnInit, OnDestroy {
   private editor_label?: EditorJS;
   private editor_edges?: EditorJS;
   private editor_data?: EditorJS;
+  @ViewChild('cm') contextMenu?: ContextMenu;
+  items: MenuItem[] = [{ label: 'Option 1', command: () => this.newNode() }, { label: 'Option 2' }];
 
   optionKeyPressed = false;
 
@@ -127,6 +140,9 @@ export class nodemdComponent implements OnInit, OnDestroy {
           return this.focusEditor(this.editor_edges);
         case 'KeyD':
           return this.focusEditor(this.editor_data);
+        case 'KeyN':
+          this.contextMenu!.show(event);
+          return false;
       }
     }
 
@@ -139,6 +155,8 @@ export class nodemdComponent implements OnInit, OnDestroy {
       this.optionKeyPressed = false;
     }
   }
+
+  private newNode() {}
 
   private focusEditor(editor?: EditorJS): boolean {
     console.log('focussing on', editor);
