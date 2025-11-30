@@ -35,7 +35,12 @@ export class nodemdComponent implements OnInit, OnDestroy {
   private editor_edges?: EditorJS;
   private editor_data?: EditorJS;
   @ViewChild('cm') contextMenu?: ContextMenu;
-  items: MenuItem[] = [{ label: 'Option 1', command: () => this.newNode() }, { label: 'Option 2' }];
+  items: MenuItem[] = [
+    { label: 'Label', command: () => this.newNode('Label') },
+    { label: 'Markdown', command: () => this.newNode('Markdown') },
+    { label: 'Schema', command: () => this.newNode('Schema') },
+  ];
+  data_node = false;
 
   optionKeyPressed = false;
 
@@ -89,7 +94,6 @@ export class nodemdComponent implements OnInit, OnDestroy {
       async (api, _) => {
         const blocks = (await api.saver.save()).blocks;
         const dn = nodemdComponent.blocksToDataNode(blocks);
-        console.log(dn.data);
         this.node().dataNode = dn;
         await this.dh.updateNode(this.node());
       },
@@ -130,8 +134,6 @@ export class nodemdComponent implements OnInit, OnDestroy {
       this.optionKeyPressed = true;
     }
 
-    console.log(event);
-
     if (event.altKey) {
       switch (event.code) {
         case 'KeyL':
@@ -141,7 +143,7 @@ export class nodemdComponent implements OnInit, OnDestroy {
         case 'KeyD':
           return this.focusEditor(this.editor_data);
         case 'KeyN':
-          this.contextMenu!.show(event);
+          this.omitCombined(() => this.contextMenu!.show(event));
           return false;
       }
     }
@@ -156,23 +158,42 @@ export class nodemdComponent implements OnInit, OnDestroy {
     }
   }
 
-  private newNode() {}
+  private async newNode(type: string) {
+    let node: Node | undefined;
+    switch (type) {
+      case 'Label':
+        node = Node.new_label('Label');
+        break;
+      case 'Markdown':
+        node = Node.new_mime('Label MD', 'Markdown');
+        break;
+      case 'Schema':
+        node = Node.new_schema('Label schema');
+        break;
+      default:
+        return;
+    }
+    await this.dh.updateNode(node);
+  }
 
   private focusEditor(editor?: EditorJS): boolean {
-    console.log('focussing on', editor);
     if (editor) {
       try {
         // This is to avoid composed keypresses on mac os X to go through.
         // E.g., on US keyboard, option+E is a composed key.
-        this.elementRef.nativeElement.querySelector('#hidden')!.focus();
-        setTimeout(() => {
-          editor.focus();
-        }, 10);
+        this.omitCombined(() => editor.focus());
       } catch (error) {
         console.error('Failed to focus editor:', error);
       }
     }
     return false;
+  }
+
+  private omitCombined(cb: () => void) {
+    this.elementRef.nativeElement.querySelector('#hidden')!.focus();
+    setTimeout(() => {
+      cb();
+    }, 10);
   }
 
   private async initializeEditor(

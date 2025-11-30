@@ -3,26 +3,29 @@
     id="hidden"
     style="border: 0px; position: absolute; color: #fff; height: 0px; width: 0px"
   />
-  <h1>{{ node().kind }}: {{ node().label }}</h1>
+  <h1>Type: {{ node().kind }}</h1>
+  <h1 style="display: inline">Label</h1>
   <div class="editor-wrapper">
     @if (optionKeyPressed) {
       <div class="shortcut-hint">option+L</div>
     }
     <div id="editor_label"></div>
   </div>
-  <h1>Edges</h1>
+  <h1 style="display: inline">Edges</h1>
   <div class="editor-wrapper">
     @if (optionKeyPressed) {
       <div class="shortcut-hint">option+E</div>
     }
     <div id="editor_edges"></div>
   </div>
-  <h1>Data</h1>
-  <div class="editor-wrapper">
-    @if (optionKeyPressed) {
-      <div class="shortcut-hint">option+D</div>
-    }
-    <div id="editor_data"></div>
-  </div>
+  @if (data_node) {
+    <h1 style="display: inline">Data</h1>
+    <div class="editor-wrapper">
+      @if (optionKeyPressed) {
+        <div class="shortcut-hint">option+D</div>
+      }
+      <div id="editor_data"></div>
+    </div>
+  }
   <p-contextMenu #cm [model]="items" [global]="true"></p-contextMenu>
 </div>

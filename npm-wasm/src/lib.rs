@@ -99,6 +99,18 @@ impl NodeWrapper {
     pub fn to_string(&self) -> String {
         format!("{:?}", self.0)
     }
+
+    pub fn new_label(label: String) -> NodeWrapper {
+        NodeWrapper(Node::label(&label))
+    }
+
+    pub fn new_mime(label: String, mime: String) -> NodeWrapper {
+        NodeWrapper(Node::mime(mime, label))
+    }
+
+    pub fn new_schema(label: String) -> NodeWrapper {
+        NodeWrapper(Node::schema(label))
+    }
 }
 
 enum Backend {
