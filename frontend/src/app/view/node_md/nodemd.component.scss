@@ -4,3 +4,22 @@
   margin: 0 auto;
   padding: 20px;
 }
+
+.editor-wrapper {
+  position: relative;
+}
+
+.shortcut-hint {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background-color: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: monospace;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 1000;
+}

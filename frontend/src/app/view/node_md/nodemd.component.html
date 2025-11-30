@@ -1,8 +1,27 @@
 <div class="editor-container">
+  <input
+    id="hidden"
+    style="border: 0px; position: absolute; color: #fff; height: 0px; width: 0px"
+  />
   <h1>{{ node().kind }}: {{ node().label }}</h1>
-  <div id="editor_label"></div>
+  <div class="editor-wrapper">
+    @if (optionKeyPressed) {
+      <div class="shortcut-hint">option+L</div>
+    }
+    <div id="editor_label"></div>
+  </div>
   <h1>Edges</h1>
-  <div id="editor_edges"></div>
+  <div class="editor-wrapper">
+    @if (optionKeyPressed) {
+      <div class="shortcut-hint">option+E</div>
+    }
+    <div id="editor_edges"></div>
+  </div>
   <h1>Data</h1>
-  <div id="editor_data"></div>
+  <div class="editor-wrapper">
+    @if (optionKeyPressed) {
+      <div class="shortcut-hint">option+D</div>
+    }
+    <div id="editor_data"></div>
+  </div>
 </div>

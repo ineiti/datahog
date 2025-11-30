@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, input } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, input, HostListener } from '@angular/core';
 import EditorJS, {
   API,
   BlockMutationEvent,
@@ -24,6 +24,8 @@ export class nodemdComponent implements OnInit, OnDestroy {
   private editor_edges?: EditorJS;
   private editor_data?: EditorJS;
 
+  optionKeyPressed = false;
+
   private static text_tools = {
     header: {
       class: Header as any,
@@ -46,7 +48,9 @@ export class nodemdComponent implements OnInit, OnDestroy {
   constructor(
     private elementRef: ElementRef,
     private dh: DataHogService,
-  ) {}
+  ) {
+    // Capture keyboard events in capture phase to prevent EditorJS from receiving them
+  }
 
   async ngOnInit() {
     this.editor_label = await this.initializeEditor(
@@ -61,6 +65,7 @@ export class nodemdComponent implements OnInit, OnDestroy {
         await this.dh.updateNode(this.node());
       },
     );
+    setTimeout(() => this.editor_label!.focus(), 10);
     this.editor_edges = await this.initializeEditor('#editor_edges');
     this.editor_data = await this.initializeEditor(
       '#editor_data',
@@ -104,6 +109,52 @@ export class nodemdComponent implements OnInit, OnDestroy {
     this.editor_label?.destroy();
     this.editor_edges?.destroy();
     this.editor_data?.destroy();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Alt') {
+      this.optionKeyPressed = true;
+    }
+
+    console.log(event);
+
+    if (event.altKey) {
+      switch (event.code) {
+        case 'KeyL':
+          return this.focusEditor(this.editor_label);
+        case 'KeyE':
+          return this.focusEditor(this.editor_edges);
+        case 'KeyD':
+          return this.focusEditor(this.editor_data);
+      }
+    }
+
+    return true;
+  }
+
+  @HostListener('window:keyup', ['$event'])
+  handleKeyUp(event: KeyboardEvent) {
+    if (event.key === 'Alt') {
+      this.optionKeyPressed = false;
+    }
+  }
+
+  private focusEditor(editor?: EditorJS): boolean {
+    console.log('focussing on', editor);
+    if (editor) {
+      try {
+        // This is to avoid composed keypresses on mac os X to go through.
+        // E.g., on US keyboard, option+E is a composed key.
+        this.elementRef.nativeElement.querySelector('#hidden')!.focus();
+        setTimeout(() => {
+          editor.focus();
+        }, 10);
+      } catch (error) {
+        console.error('Failed to focus editor:', error);
+      }
+    }
+    return false;
   }
 
   private async initializeEditor(
