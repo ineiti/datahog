@@ -23,13 +23,13 @@ import { ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
 
 @Component({
-  selector: 'view-nodemd',
+  selector: 'view-node',
   standalone: true,
   imports: [ContextMenu],
-  templateUrl: './nodemd.component.html',
-  styleUrl: './nodemd.component.scss',
+  templateUrl: './node.component.html',
+  styleUrl: './node.component.scss',
 })
-export class nodemdComponent implements OnInit, OnDestroy {
+export class nodeComponent implements OnInit, OnDestroy {
   node = input.required<Node>();
   private editor_label?: EditorJS;
   private editor_edges?: EditorJS;
@@ -88,12 +88,12 @@ export class nodemdComponent implements OnInit, OnDestroy {
     this.editor_data = await this.initializeEditor(
       '#editor_data',
       {
-        blocks: nodemdComponent.dataNodeToBlocks(this.node().dataNode),
+        blocks: nodeComponent.dataNodeToBlocks(this.node().dataNode),
       },
-      nodemdComponent.text_tools,
+      nodeComponent.text_tools,
       async (api, _) => {
         const blocks = (await api.saver.save()).blocks;
-        const dn = nodemdComponent.blocksToDataNode(blocks);
+        const dn = nodeComponent.blocksToDataNode(blocks);
         this.node().dataNode = dn;
         await this.dh.updateNode(this.node());
       },
@@ -107,13 +107,13 @@ export class nodemdComponent implements OnInit, OnDestroy {
     }
     const dn = new DataNode(`${JSON.stringify(block)}`);
     if (blocks.length > 0) {
-      dn.set_sibling(nodemdComponent.blocksToDataNode(blocks));
+      dn.set_sibling(nodeComponent.blocksToDataNode(blocks));
     }
     return dn;
   }
 
   static dataNodeToBlocks(dn: DataNode): OutputBlockData[] {
-    const bds = dn.sibling.length > 0 ? nodemdComponent.dataNodeToBlocks(dn.sibling[0]) : [];
+    const bds = dn.sibling.length > 0 ? nodeComponent.dataNodeToBlocks(dn.sibling[0]) : [];
     let bd = JSON.parse(dn.data);
     if (bd.id === undefined || bd.type === undefined || bd.data === undefined) {
       bd = { type: 'paragraph', data: { text: dn.data } };

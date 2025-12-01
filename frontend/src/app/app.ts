@@ -1,12 +1,12 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { DataHogService } from './data-hog';
-import { nodemdComponent } from './view/node_md/nodemd.component';
+import { nodeComponent } from './view/node/node.component';
 import { Node } from 'datahog-npm';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, nodemdComponent],
+  imports: [RouterOutlet, nodeComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
