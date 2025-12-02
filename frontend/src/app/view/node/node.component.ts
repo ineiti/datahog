@@ -3,10 +3,11 @@ import {
   OnInit,
   OnDestroy,
   ElementRef,
-  input,
   HostListener,
   ViewChild,
+  ChangeDetectorRef,
 } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import EditorJS, {
   API,
   BlockMutationEvent,
@@ -17,7 +18,7 @@ import EditorJS, {
 } from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
-import { DataNode, Node } from 'datahog-npm';
+import { DataNode, Node, NodeID } from 'datahog-npm';
 import { DataHogService } from '../../data-hog';
 import { ContextMenu } from 'primeng/contextmenu';
 import { MenuItem } from 'primeng/api';
@@ -30,11 +31,27 @@ import { MenuItem } from 'primeng/api';
   styleUrl: './node.component.scss',
 })
 export class nodeComponent implements OnInit, OnDestroy {
-  node = input.required<Node>();
+  node?: Node;
   private editor_label?: EditorJS;
   private editor_edges?: EditorJS;
   private editor_data?: EditorJS;
   @ViewChild('cm') contextMenu?: ContextMenu;
+  @ViewChild('editorLabel') set editorLabel(content: ElementRef) {
+    if (content && this.node) {
+      this.startEditor('label', content);
+    }
+  }
+  @ViewChild('editorEdges') set editorEdges(content: ElementRef) {
+    if (content && this.node) {
+      this.startEditor('edges', content);
+    }
+  }
+  @ViewChild('editorData') set editorData(content: ElementRef) {
+    if (content && this.node) {
+      this.startEditor('data', content);
+    }
+  }
+  // @ViewChild('editorEdges') set editorLabel;
   items: MenuItem[] = [
     { label: 'Label', command: () => this.newNode('Label') },
     { label: 'Markdown', command: () => this.newNode('Markdown') },
@@ -66,38 +83,39 @@ export class nodeComponent implements OnInit, OnDestroy {
   constructor(
     private elementRef: ElementRef,
     private dh: DataHogService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private cdr: ChangeDetectorRef,
   ) {
     // Capture keyboard events in capture phase to prevent EditorJS from receiving them
   }
 
   async ngOnInit() {
-    this.editor_label = await this.initializeEditor(
-      '#editor_label',
-      {
-        blocks: [{ type: 'paragraph', data: { text: this.node().label } }],
-      },
-      undefined,
-      async (api, _) => {
-        let data = await api.blocks.getBlockByIndex(0)?.save();
-        this.node().label = data!.data.text;
-        await this.dh.updateNode(this.node());
-      },
-    );
-    setTimeout(() => this.editor_label!.focus(), 10);
-    this.editor_edges = await this.initializeEditor('#editor_edges');
-    this.editor_data = await this.initializeEditor(
-      '#editor_data',
-      {
-        blocks: nodeComponent.dataNodeToBlocks(this.node().dataNode),
-      },
-      nodeComponent.text_tools,
-      async (api, _) => {
-        const blocks = (await api.saver.save()).blocks;
-        const dn = nodeComponent.blocksToDataNode(blocks);
-        this.node().dataNode = dn;
-        await this.dh.updateNode(this.node());
-      },
-    );
+    // Subscribe to route parameter changes
+    this.route.paramMap.subscribe(async (params) => {
+      const nodeIDstr = params.get('nodeID');
+      if (!nodeIDstr) {
+        console.error('No nodeID provided in route');
+        return;
+      }
+
+      try {
+        // Clean up existing editors before loading new node
+        this.editor_label?.destroy();
+        this.editor_edges?.destroy();
+        this.editor_data?.destroy();
+
+        this.node = undefined; // Reset to show loading state
+        this.node = await this.dh.getNode(NodeID.fromString(nodeIDstr));
+        console.log('Node is:', this.node!.to_string());
+
+        // Trigger change detection to update template and ViewChild elements
+        this.cdr.detectChanges();
+      } catch (error) {
+        console.error(`Failed to parse nodeID: ${error}`);
+        return;
+      }
+    });
   }
 
   static blocksToDataNode(blocks: OutputBlockData[]): DataNode {
@@ -114,11 +132,15 @@ export class nodeComponent implements OnInit, OnDestroy {
 
   static dataNodeToBlocks(dn: DataNode): OutputBlockData[] {
     const bds = dn.sibling.length > 0 ? nodeComponent.dataNodeToBlocks(dn.sibling[0]) : [];
-    let bd = JSON.parse(dn.data);
-    if (bd.id === undefined || bd.type === undefined || bd.data === undefined) {
-      bd = { type: 'paragraph', data: { text: dn.data } };
+    try {
+      let bd = JSON.parse(dn.data);
+      if (bd.id === undefined || bd.type === undefined || bd.data === undefined) {
+        bd = { type: 'paragraph', data: { text: dn.data } };
+      }
+      bds.unshift(bd);
+    } catch (e) {
+      console.warn(`Couldn't parse JSON of dataNode: ${e}`);
     }
-    bds.unshift(bd);
     return bds;
   }
 
@@ -174,6 +196,8 @@ export class nodeComponent implements OnInit, OnDestroy {
         return;
     }
     await this.dh.updateNode(node);
+    // Navigate to the newly created node
+    await this.router.navigate(['/node', node.id.toString()]);
   }
 
   private focusEditor(editor?: EditorJS): boolean {
@@ -196,23 +220,63 @@ export class nodeComponent implements OnInit, OnDestroy {
     }, 10);
   }
 
+  private async startEditor(name: String, holder?: ElementRef<HTMLHtmlElement>) {
+    if (!holder) {
+      return;
+    }
+    switch (name) {
+      case 'label':
+        this.editor_label = await this.initializeEditor(
+          holder,
+          {
+            blocks: [{ type: 'paragraph', data: { text: this.node!.label } }],
+          },
+          undefined,
+          async (api, _) => {
+            let data = await api.blocks.getBlockByIndex(0)?.save();
+            this.node!.label = data!.data.text;
+            await this.dh.updateNode(this.node!);
+          },
+        );
+        setTimeout(() => this.editor_label!.focus(), 10);
+        break;
+      case 'edges':
+        this.editor_edges = await this.initializeEditor(holder);
+        break;
+      case 'data':
+        this.editor_data = await this.initializeEditor(
+          holder,
+          {
+            blocks: nodeComponent.dataNodeToBlocks(this.node!.dataNode),
+          },
+          nodeComponent.text_tools,
+          async (api, _) => {
+            const blocks = (await api.saver.save()).blocks;
+            const dn = nodeComponent.blocksToDataNode(blocks);
+            this.node!.dataNode = dn;
+            await this.dh.updateNode(this.node!);
+          },
+        );
+        break;
+    }
+  }
+
   private async initializeEditor(
-    selector: string,
+    holder?: ElementRef<HTMLHtmlElement>,
     data?: OutputData,
     tools?: { [toolName: string]: ToolConstructable | ToolSettings },
     onChange?: (api: API, event: BlockMutationEvent | BlockMutationEvent[]) => Promise<void>,
   ): Promise<EditorJS | undefined> {
-    const holder = this.elementRef.nativeElement.querySelector(selector);
     if (!holder) {
-      console.error(`Editor element ${selector} not found`);
+      console.warn(`Editor disappeared`);
       return undefined;
     }
 
     return new Promise((resolve) => {
       const editor = new EditorJS({
-        holder,
+        holder: holder.nativeElement,
         data,
-        placeholder: `Start adding a ${selector}`,
+        placeholder: `Start adding`,
         tools,
         minHeight: 0,
 

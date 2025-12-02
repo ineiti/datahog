@@ -1,31 +1,35 @@
-<div class="editor-container">
-  <input
-    id="hidden"
-    style="border: 0px; position: absolute; color: #fff; height: 0px; width: 0px"
-  />
-  <h1>Type: {{ node().kind }}</h1>
-  <h1 style="display: inline">Label</h1>
-  <div class="editor-wrapper">
-    @if (optionKeyPressed) {
-      <div class="shortcut-hint">option+L</div>
-    }
-    <div id="editor_label"></div>
-  </div>
-  <h1 style="display: inline">Edges</h1>
-  <div class="editor-wrapper">
-    @if (optionKeyPressed) {
-      <div class="shortcut-hint">option+E</div>
-    }
-    <div id="editor_edges"></div>
-  </div>
-  @if (data_node) {
-    <h1 style="display: inline">Data</h1>
+@if (node === undefined) {
+  <h1>Fetching node</h1>
+} @else {
+  <div class="editor-container">
+    <input
+      id="hidden"
+      style="border: 0px; position: absolute; color: #fff; height: 0px; width: 0px"
+    />
+    <h1>Type: {{ node!.kind }}</h1>
+    <h1 style="display: inline">Label</h1>
     <div class="editor-wrapper">
       @if (optionKeyPressed) {
-        <div class="shortcut-hint">option+D</div>
+        <div class="shortcut-hint">option+L</div>
       }
-      <div id="editor_data"></div>
+      <div id="editor_label" #editorLabel></div>
     </div>
-  }
-  <p-contextMenu #cm [model]="items" [global]="true"></p-contextMenu>
-</div>
+    <h1 style="display: inline">Edges</h1>
+    <div class="editor-wrapper">
+      @if (optionKeyPressed) {
+        <div class="shortcut-hint">option+E</div>
+      }
+      <div id="editor_edges" #editorEdges></div>
+    </div>
+    @if (data_node) {
+      <h1 style="display: inline">Data</h1>
+      <div class="editor-wrapper">
+        @if (optionKeyPressed) {
+          <div class="shortcut-hint">option+D</div>
+        }
+        <div id="editor_data" #editorData></div>
+      </div>
+    }
+    <p-contextMenu #cm [model]="items" [global]="true"></p-contextMenu>
+  </div>
+}

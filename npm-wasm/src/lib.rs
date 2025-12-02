@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 
 pub use datahog::{
     structs::{Edge, EdgeID, Node, NodeID, NodeKind},
@@ -16,9 +16,39 @@ use web_sys::{window, Storage};
 #[derive(AsU256)]
 pub struct NodeIDWrapper(U256);
 
+#[wasm_bindgen(js_class = NodeID)]
+impl NodeIDWrapper {
+    #[wasm_bindgen(js_name = fromString)]
+    pub fn from_str(id: &str) -> Result<NodeIDWrapper, String> {
+        Ok(Self(
+            U256::from_str(id).map_err(|e| format!("Conversion error: {e:?}"))?,
+        ))
+    }
+
+    #[wasm_bindgen(js_name = toString)]
+    pub fn to_string(&self) -> String {
+        format!("{:x}", self.0)
+    }
+}
+
 #[wasm_bindgen(js_name = EdgeID)]
 #[derive(AsU256)]
 pub struct EdgeIDWrapper(U256);
+
+#[wasm_bindgen(js_class = EdgeID)]
+impl EdgeIDWrapper {
+    #[wasm_bindgen(js_name = fromString)]
+    pub fn from_str(id: &str) -> Result<EdgeIDWrapper, String> {
+        Ok(Self(
+            U256::from_str(id).map_err(|e| format!("Conversion error: {e:?}"))?,
+        ))
+    }
+
+    #[wasm_bindgen(js_name = toString)]
+    pub fn to_string(&self) -> String {
+        format!("{:?}", self.0)
+    }
+}
 
 #[wasm_bindgen(js_name = Transaction)]
 pub struct TransactionWrapper(Transaction);

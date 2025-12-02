@@ -1,28 +1,32 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { DataHogService } from './data-hog';
-import { nodeComponent } from './view/node/node.component';
-import { Node } from 'datahog-npm';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, nodeComponent],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
+  initialized = false;
   protected readonly title = signal('frontend');
-  protected readonly rootNode = signal<Node | null>(null);
 
-  constructor(private dh: DataHogService) {}
+  constructor(
+    private dh: DataHogService,
+    private router: Router,
+  ) {}
 
   async ngOnInit() {
     return new Promise((res) => {
       this.dh.done.subscribe(() => {
         res(true);
-        this.dh.getNode(this.dh.rootNodeID).then((root) => {
-          this.rootNode.set(root);
-        });
+        this.initialized = true;
+        // Only navigate to root if there's no current route
+        if (this.router.url === '/') {
+          const rootNodeIDStr = this.dh.rootNodeID.toString();
+          this.router.navigate(['/node', rootNodeIDStr]);
+        }
       });
     });
   }

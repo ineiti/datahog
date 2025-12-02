@@ -1,4 +1,5 @@
-@if (rootNode()) {
-  <view-node [node]="rootNode()!" />
-}
+@if (initialized){
 <router-outlet />
+} @else {
+<h1>Connecting to backend</h1>
+}
