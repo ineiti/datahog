@@ -242,6 +242,14 @@ impl Datahog {
         Ok(())
     }
 
+    pub async fn search_nodes(&self, _search: String) -> Result<Vec<NodeWrapper>, String> {
+        Ok(self
+            .nodes
+            .values()
+            .map(|n| NodeWrapper(n.clone()))
+            .collect())
+    }
+
     async fn get<T: DeserializeOwned>(&mut self, api: &str, id: U256) -> Result<Option<T>, String> {
         match &self.backend {
             Backend::URL(url) => reqwest::get(&format!("{url}/get_{api}?id={id:?}"))

@@ -22,11 +22,6 @@ export class App {
       this.dh.done.subscribe(() => {
         res(true);
         this.initialized = true;
-        // Only navigate to root if there's no current route
-        if (this.router.url === '/') {
-          const rootNodeIDStr = this.dh.rootNodeID.toString();
-          this.router.navigate(['/node', rootNodeIDStr]);
-        }
       });
     });
   }

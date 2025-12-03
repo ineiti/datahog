@@ -1,0 +1,68 @@
+<div class="search-container">
+  <div class="search-bar">
+    <input
+      type="text"
+      class="search-input"
+      [(ngModel)]="searchQuery"
+      (ngModelChange)="onSearchChange($event)"
+      placeholder="Search nodes..."
+      autocomplete="off"
+    />
+  </div>
+
+  <div class="results-grid">
+    <div class="results-column">
+      <h2 class="column-header">Label</h2>
+      <div class="results-list">
+        @for (node of labelResults; track node.id.toString(); let i = $index) {
+          <div
+            class="result-item"
+            [class.selected]="isSelected(0, i)"
+            (click)="onNodeClick(0, i, node)"
+          >
+            {{ node.label }}
+          </div>
+        }
+        @empty {
+          <div class="empty-message">No label nodes found</div>
+        }
+      </div>
+    </div>
+
+    <div class="results-column">
+      <h2 class="column-header">Markdown</h2>
+      <div class="results-list">
+        @for (node of markdownResults; track node.id.toString(); let i = $index) {
+          <div
+            class="result-item"
+            [class.selected]="isSelected(1, i)"
+            (click)="onNodeClick(1, i, node)"
+          >
+            {{ node.label }}
+          </div>
+        }
+        @empty {
+          <div class="empty-message">No markdown nodes found</div>
+        }
+      </div>
+    </div>
+
+    <div class="results-column">
+      <h2 class="column-header">Schema</h2>
+      <div class="results-list">
+        @for (node of schemaResults; track node.id.toString(); let i = $index) {
+          <div
+            class="result-item"
+            [class.selected]="isSelected(2, i)"
+            (click)="onNodeClick(2, i, node)"
+          >
+            {{ node.label }}
+          </div>
+        }
+        @empty {
+          <div class="empty-message">No schema nodes found</div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

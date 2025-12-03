@@ -44,4 +44,8 @@ export class DataHogService {
   async updateEdge(edge: Edge) {
     await this._dh?.update_edge(edge);
   }
+
+  async searchNodes(search: string): Promise<Node[]> {
+    return (await this._dh?.search_nodes(search)) || [];
+  }
 }
