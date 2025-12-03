@@ -1,5 +1,5 @@
 import { Component, HostListener, signal } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import { DataHogService } from './data-hog';
 
 @Component({
@@ -15,6 +15,7 @@ export class App {
   constructor(
     private dh: DataHogService,
     private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   async ngOnInit() {
@@ -33,9 +34,36 @@ export class App {
         case 'KeyF':
           this.router.navigate(['/']);
           return false;
+        case 'KeyN':
+          this.navigateToNodeView();
+          return false;
+        case 'KeyM':
+          this.navigateToMarkdown();
+          return false;
       }
     }
 
     return true;
+  }
+
+  private navigateToNodeView() {
+    // Get the current URL and extract nodeID if present
+    const url = this.router.url;
+    const nodeIDMatch = url.match(/\/(node|markdown)\/([^\/]+)/);
+
+    if (nodeIDMatch && nodeIDMatch[2]) {
+      const nodeID = nodeIDMatch[2];
+      this.router.navigate(['/node', nodeID]);
+    }
+  }
+  private navigateToMarkdown() {
+    // Get the current URL and extract nodeID if present
+    const url = this.router.url;
+    const nodeIDMatch = url.match(/\/(node|markdown)\/([^\/]+)/);
+
+    if (nodeIDMatch && nodeIDMatch[2]) {
+      const nodeID = nodeIDMatch[2];
+      this.router.navigate(['/markdown', nodeID]);
+    }
   }
 }

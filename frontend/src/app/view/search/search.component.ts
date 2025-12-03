@@ -172,7 +172,12 @@ export class SearchComponent implements OnInit, OnDestroy {
   }
 
   navigateToNode(node: Node) {
-    this.router.navigate(['/node', node.id.toString()]);
+    // Route markdown nodes to the markdown view
+    if (node.kind.startsWith('MimeType')) {
+      this.router.navigate(['/markdown', node.id.toString()]);
+    } else {
+      this.router.navigate(['/node', node.id.toString()]);
+    }
   }
 
   isSelected(columnIndex: number, rowIndex: number): boolean {

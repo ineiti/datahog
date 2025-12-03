@@ -1,0 +1,34 @@
+.markdown-view {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.node-label {
+  max-width: 800px;
+  margin: 0 auto 20px;
+  font-size: 2em;
+  font-weight: bold;
+  color: #333;
+}
+
+.editor-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.editor {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 18px;
+  color: #666;
+}

@@ -112,32 +112,6 @@ export class nodeComponent implements OnInit, OnDestroy {
     });
   }
 
-  static blocksToDataNode(blocks: OutputBlockData[]): DataNode {
-    const block = blocks.shift();
-    if (block === undefined) {
-      return new DataNode('empty');
-    }
-    const dn = new DataNode(`${JSON.stringify(block)}`);
-    if (blocks.length > 0) {
-      dn.set_sibling(nodeComponent.blocksToDataNode(blocks));
-    }
-    return dn;
-  }
-
-  static dataNodeToBlocks(dn: DataNode): OutputBlockData[] {
-    const bds = dn.sibling.length > 0 ? nodeComponent.dataNodeToBlocks(dn.sibling[0]) : [];
-    try {
-      let bd = JSON.parse(dn.data);
-      if (bd.id === undefined || bd.type === undefined || bd.data === undefined) {
-        bd = { type: 'paragraph', data: { text: dn.data } };
-      }
-      bds.unshift(bd);
-    } catch (e) {
-      console.warn(`Couldn't parse JSON of dataNode: ${e}`);
-    }
-    return bds;
-  }
-
   ngOnDestroy() {
     this.editor_label?.destroy();
     this.editor_edges?.destroy();
@@ -241,12 +215,12 @@ export class nodeComponent implements OnInit, OnDestroy {
         this.editor_data = await this.initializeEditor(
           holder,
           {
-            blocks: nodeComponent.dataNodeToBlocks(this.node!.dataNode),
+            blocks: DataHogService.dataNodeToBlocks(this.node!.dataNode),
           },
           nodeComponent.text_tools,
           async (api, _) => {
             const blocks = (await api.saver.save()).blocks;
-            const dn = nodeComponent.blocksToDataNode(blocks);
+            const dn = DataHogService.blocksToDataNode(blocks);
             this.node!.dataNode = dn;
             await this.dh.updateNode(this.node!);
           },

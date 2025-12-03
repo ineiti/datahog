@@ -256,10 +256,11 @@ impl Datahog {
     }
 
     pub async fn search_nodes(&self, search: String) -> Result<Vec<NodeWrapper>, String> {
+        let lower = search.to_lowercase();
         Ok(self
             .nodes
             .values()
-            .filter(|n| n.label.find(&search).is_some())
+            .filter(|n| n.label.to_lowercase().contains(&lower))
             .map(|n| NodeWrapper(n.clone()))
             .collect())
     }

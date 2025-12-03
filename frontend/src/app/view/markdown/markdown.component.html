@@ -1,0 +1,10 @@
+@if (node) {
+<div class="markdown-view">
+  <h1 class="node-label">{{ node.label }}</h1>
+  <div class="editor-container">
+    <div #editorData class="editor"></div>
+  </div>
+</div>
+} @else {
+<div class="loading">Loading...</div>
+}
