@@ -7,6 +7,7 @@
       (ngModelChange)="onSearchChange($event)"
       placeholder="Search nodes..."
       autocomplete="off"
+      #search
     />
   </div>
 
@@ -24,8 +25,7 @@
           >
             {{ node.label }}
           </div>
-        }
-        @empty {
+        } @empty {
           <div class="empty-message">No label nodes found</div>
         }
       </div>
@@ -44,8 +44,7 @@
           >
             {{ node.label }}
           </div>
-        }
-        @empty {
+        } @empty {
           <div class="empty-message">No markdown nodes found</div>
         }
       </div>
@@ -64,8 +63,7 @@
           >
             {{ node.label }}
           </div>
-        }
-        @empty {
+        } @empty {
           <div class="empty-message">No schema nodes found</div>
         }
       </div>

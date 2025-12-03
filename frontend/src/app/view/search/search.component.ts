@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -15,6 +15,9 @@ import { Node } from 'datahog-npm';
   styleUrl: './search.component.scss',
 })
 export class SearchComponent implements OnInit, OnDestroy {
+  @ViewChild('search') set searchFocus(element: ElementRef) {
+    element?.nativeElement.focus();
+  }
   searchQuery = '';
   labelResults: Node[] = [];
   markdownResults: Node[] = [];

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, HostListener, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { DataHogService } from './data-hog';
 
@@ -24,5 +24,18 @@ export class App {
         this.initialized = true;
       });
     });
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (event.altKey) {
+      switch (event.code) {
+        case 'KeyF':
+          this.router.navigate(['/']);
+          return false;
+      }
+    }
+
+    return true;
   }
 }
