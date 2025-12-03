@@ -36,10 +36,7 @@ export class SearchComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     // Set up debounced search
     this.searchSubscription = this.searchSubject
-      .pipe(
-        debounceTime(400),
-        distinctUntilChanged(),
-      )
+      .pipe(debounceTime(400), distinctUntilChanged())
       .subscribe((query) => {
         this.update_search(query);
       });
@@ -62,13 +59,14 @@ export class SearchComponent implements OnInit, OnDestroy {
 
     // Filter results by kind into three columns
     this.labelResults = results.filter((node) => node.kind === 'Label');
-    this.markdownResults = results.filter((node) => node.kind === 'Markdown');
+    this.markdownResults = results.filter((node) => node.kind.startsWith('MimeType'));
     this.schemaResults = results.filter((node) => node.kind === 'Schema');
 
     // Reset selection to first item in first non-empty column
     this.selectedColumn = 0;
     this.selectedRow = 0;
     this.ensureValidSelection();
+    this.scrollSelectedIntoView();
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -101,6 +99,7 @@ export class SearchComponent implements OnInit, OnDestroy {
     if (this.selectedColumn > 0) {
       this.selectedColumn--;
       this.ensureValidSelection();
+      this.scrollSelectedIntoView();
     }
   }
 
@@ -108,12 +107,14 @@ export class SearchComponent implements OnInit, OnDestroy {
     if (this.selectedColumn < 2) {
       this.selectedColumn++;
       this.ensureValidSelection();
+      this.scrollSelectedIntoView();
     }
   }
 
   private moveUp() {
     if (this.selectedRow > 0) {
       this.selectedRow--;
+      this.scrollSelectedIntoView();
     }
   }
 
@@ -121,6 +122,7 @@ export class SearchComponent implements OnInit, OnDestroy {
     const currentColumn = this.getCurrentColumn();
     if (this.selectedRow < currentColumn.length - 1) {
       this.selectedRow++;
+      this.scrollSelectedIntoView();
     }
   }
 
@@ -129,6 +131,21 @@ export class SearchComponent implements OnInit, OnDestroy {
     if (this.selectedRow >= currentColumn.length) {
       this.selectedRow = Math.max(0, currentColumn.length - 1);
     }
+  }
+
+  private scrollSelectedIntoView() {
+    // Use setTimeout to ensure DOM is updated before scrolling
+    setTimeout(() => {
+      const selector = `.result-item[data-column="${this.selectedColumn}"][data-row="${this.selectedRow}"]`;
+      const element = document.querySelector(selector);
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'nearest',
+        });
+      }
+    });
   }
 
   private getCurrentColumn(): Node[] {

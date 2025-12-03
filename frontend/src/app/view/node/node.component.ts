@@ -37,19 +37,13 @@ export class nodeComponent implements OnInit, OnDestroy {
   private editor_data?: EditorJS;
   @ViewChild('cm') contextMenu?: ContextMenu;
   @ViewChild('editorLabel') set editorLabel(content: ElementRef) {
-    if (content && this.node) {
-      this.startEditor('label', content);
-    }
+    this.startEditor('label', content);
   }
   @ViewChild('editorEdges') set editorEdges(content: ElementRef) {
-    if (content && this.node) {
-      this.startEditor('edges', content);
-    }
+    this.startEditor('edges', content);
   }
   @ViewChild('editorData') set editorData(content: ElementRef) {
-    if (content && this.node) {
-      this.startEditor('data', content);
-    }
+    this.startEditor('data', content);
   }
   // @ViewChild('editorEdges') set editorLabel;
   items: MenuItem[] = [
@@ -106,11 +100,11 @@ export class nodeComponent implements OnInit, OnDestroy {
         this.editor_data?.destroy();
 
         this.node = undefined; // Reset to show loading state
-        this.node = await this.dh.getNode(NodeID.fromString(nodeIDstr));
-        console.log('Node is:', this.node!.to_string());
-
-        // Trigger change detection to update template and ViewChild elements
         this.cdr.detectChanges();
+        setTimeout(async () => {
+          this.node = await this.dh.getNode(NodeID.fromString(nodeIDstr));
+          this.data_node = this.node!.kind !== 'Label';
+        });
       } catch (error) {
         console.error(`Failed to parse nodeID: ${error}`);
         return;
@@ -221,7 +215,7 @@ export class nodeComponent implements OnInit, OnDestroy {
   }
 
   private async startEditor(name: String, holder?: ElementRef<HTMLHtmlElement>) {
-    if (!holder) {
+    if (!this.node || !holder) {
       return;
     }
     switch (name) {

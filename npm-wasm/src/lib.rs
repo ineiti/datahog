@@ -187,6 +187,19 @@ impl Datahog {
             dh.update_node(&NodeWrapper(root.clone())).await?;
             dh.put("node", U256::zero(), &root).await?;
             dh.root = root.id.clone();
+        } else if let Backend::Local(storage) = &dh.backend {
+            let len = storage
+                .length()
+                .map_err(|e| format!("Couldn't get storage length: {e:?}"))?;
+            for i in 0..len {
+                if let Ok(Some(id_str)) = storage.key(i) {
+                    if let Ok(Some(val)) = storage.get_item(&id_str) {
+                        if let Ok(node) = serde_json::from_str::<Node>(&val) {
+                            dh.nodes.insert(node.id.clone(), node);
+                        }
+                    }
+                }
+            }
         }
         Ok(dh)
     }
@@ -242,10 +255,11 @@ impl Datahog {
         Ok(())
     }
 
-    pub async fn search_nodes(&self, _search: String) -> Result<Vec<NodeWrapper>, String> {
+    pub async fn search_nodes(&self, search: String) -> Result<Vec<NodeWrapper>, String> {
         Ok(self
             .nodes
             .values()
+            .filter(|n| n.label.find(&search).is_some())
             .map(|n| NodeWrapper(n.clone()))
             .collect())
     }
