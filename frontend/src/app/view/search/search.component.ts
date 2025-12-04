@@ -6,11 +6,12 @@ import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { DataHogService } from '../../data-hog';
 import { Node } from 'datahog-npm';
+import { KeyboardComponent } from '../../../lib/keyboard/keyboard.component';
 
 @Component({
   selector: 'view-search',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, KeyboardComponent],
   templateUrl: './search.component.html',
   styleUrl: './search.component.scss',
 })

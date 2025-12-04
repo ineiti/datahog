@@ -2,10 +2,7 @@
   <h1>Fetching node</h1>
 } @else {
   <div class="editor-container">
-    <input
-      id="hidden"
-      style="border: 0px; position: absolute; color: #fff; height: 0px; width: 0px"
-    />
+    <lib-keyboard></lib-keyboard>
     <h1>Type: {{ node!.kind }}</h1>
     <h1 style="display: inline">Label</h1>
     <div class="editor-wrapper">
@@ -30,6 +27,5 @@
         <div id="editor_data" #editorData></div>
       </div>
     }
-    <p-contextMenu #cm [model]="items" [global]="true"></p-contextMenu>
   </div>
 }

@@ -20,13 +20,12 @@ import Header from '@editorjs/header';
 import List from '@editorjs/list';
 import { DataNode, Node, NodeID } from 'datahog-npm';
 import { DataHogService } from '../../data-hog';
-import { ContextMenu } from 'primeng/contextmenu';
-import { MenuItem } from 'primeng/api';
+import { KeyboardComponent } from '../../../lib/keyboard/keyboard.component';
 
 @Component({
   selector: 'view-node',
   standalone: true,
-  imports: [ContextMenu],
+  imports: [KeyboardComponent],
   templateUrl: './node.component.html',
   styleUrl: './node.component.scss',
 })
@@ -35,7 +34,6 @@ export class nodeComponent implements OnInit, OnDestroy {
   private editor_label?: EditorJS;
   private editor_edges?: EditorJS;
   private editor_data?: EditorJS;
-  @ViewChild('cm') contextMenu?: ContextMenu;
   @ViewChild('editorLabel') set editorLabel(content: ElementRef) {
     this.startEditor('label', content);
   }
@@ -45,12 +43,6 @@ export class nodeComponent implements OnInit, OnDestroy {
   @ViewChild('editorData') set editorData(content: ElementRef) {
     this.startEditor('data', content);
   }
-  // @ViewChild('editorEdges') set editorLabel;
-  items: MenuItem[] = [
-    { label: 'Label', command: () => this.newNode('Label') },
-    { label: 'Markdown', command: () => this.newNode('Markdown') },
-    { label: 'Schema', command: () => this.newNode('Schema') },
-  ];
   data_node = false;
 
   optionKeyPressed = false;
@@ -78,7 +70,6 @@ export class nodeComponent implements OnInit, OnDestroy {
     private elementRef: ElementRef,
     private dh: DataHogService,
     private route: ActivatedRoute,
-    private router: Router,
     private cdr: ChangeDetectorRef,
   ) {
     // Capture keyboard events in capture phase to prevent EditorJS from receiving them
@@ -132,9 +123,6 @@ export class nodeComponent implements OnInit, OnDestroy {
           return this.focusEditor(this.editor_edges);
         case 'KeyD':
           return this.focusEditor(this.editor_data);
-        case 'KeyN':
-          this.omitCombined(() => this.contextMenu!.show(event));
-          return false;
       }
     }
 
@@ -146,26 +134,6 @@ export class nodeComponent implements OnInit, OnDestroy {
     if (event.key === 'Alt') {
       this.optionKeyPressed = false;
     }
-  }
-
-  private async newNode(type: string) {
-    let node: Node | undefined;
-    switch (type) {
-      case 'Label':
-        node = Node.new_label('Label');
-        break;
-      case 'Markdown':
-        node = Node.new_mime('Label MD', 'Markdown');
-        break;
-      case 'Schema':
-        node = Node.new_schema('Label schema');
-        break;
-      default:
-        return;
-    }
-    await this.dh.updateNode(node);
-    // Navigate to the newly created node
-    await this.router.navigate(['/node', node.id.toString()]);
   }
 
   private focusEditor(editor?: EditorJS): boolean {
