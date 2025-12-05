@@ -50,6 +50,10 @@ export class DataHogService {
     return (await this._dh?.search_nodes(search)) || [];
   }
 
+  async searchLabels(search: string): Promise<Node[]> {
+    return (await this.searchNodes(search)).filter((n) => n.kind === 'Label');
+  }
+
   static blocksToDataNode(blocks: OutputBlockData[]): DataNode {
     const block = blocks.shift();
     if (block === undefined) {

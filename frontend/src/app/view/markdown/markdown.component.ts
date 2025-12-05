@@ -18,13 +18,14 @@ import Header from '@editorjs/header';
 import List from '@editorjs/list';
 import { Node, NodeID } from 'datahog-npm';
 import { DataHogService } from '../../data-hog';
+import { LabelLinkTool } from '../../../lib/label-link';
 
 @Component({
   selector: 'view-markdown',
   standalone: true,
   imports: [],
   templateUrl: './markdown.component.html',
-  styleUrl: './markdown.component.scss',
+  styleUrls: ['./markdown.component.scss', '../../../lib/label-link/label-link.styles.scss'],
 })
 export class MarkdownComponent implements OnInit, OnDestroy {
   node?: Node;
@@ -33,24 +34,32 @@ export class MarkdownComponent implements OnInit, OnDestroy {
     this.startEditor(content);
   }
 
-  private static text_tools = {
-    header: {
-      class: Header as any,
-      inlineToolbar: true,
-      config: {
-        placeholder: 'Enter a header',
-        levels: [1, 2, 3, 4, 5, 6],
-        defaultLevel: 2,
+  private getTextTools() {
+    return {
+      header: {
+        class: Header as any,
+        inlineToolbar: true,
+        config: {
+          placeholder: 'Enter a header',
+          levels: [1, 2, 3, 4, 5, 6],
+          defaultLevel: 2,
+        },
       },
-    },
-    list: {
-      class: List,
-      inlineToolbar: true,
-      config: {
-        defaultStyle: 'unordered',
+      list: {
+        class: List,
+        inlineToolbar: true,
+        config: {
+          defaultStyle: 'unordered',
+        },
       },
-    },
-  };
+      labelLink: {
+        class: LabelLinkTool,
+        config: {
+          dataHogService: this.dh,
+        },
+      },
+    };
+  }
 
   constructor(
     private elementRef: ElementRef,
@@ -100,12 +109,15 @@ export class MarkdownComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Configure LabelLinkTool with DataHogService
+    LabelLinkTool.configure(this.dh);
+
     this.editor = await this.initializeEditor(
       holder,
       {
         blocks: DataHogService.dataNodeToBlocks(this.node!.dataNode),
       },
-      MarkdownComponent.text_tools,
+      this.getTextTools(),
       async (api, _) => {
         const blocks = (await api.saver.save()).blocks;
         const dn = DataHogService.blocksToDataNode(blocks);
