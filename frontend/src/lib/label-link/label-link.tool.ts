@@ -3,12 +3,13 @@ import { DataHogService } from '../../app/data-hog';
 import { Node as DataNode } from 'datahog-npm';
 
 interface LabelLinkConfig {
-  dataHogService: DataHogService;
+  getDataHogService: () => DataHogService;
 }
 
 export default class LabelLinkTool implements InlineTool {
-  private static dataHogService: DataHogService;
+  private static keyboardListened = false;
 
+  private dataHogService: DataHogService;
   private api: API;
   private button: HTMLButtonElement | null = null;
   private tag: string = 'SPAN';
@@ -27,33 +28,9 @@ export default class LabelLinkTool implements InlineTool {
     return 'Label Link';
   }
 
-  static configure(dataHogService: DataHogService): void {
-    LabelLinkTool.dataHogService = dataHogService;
-  }
-
-  constructor({ api, config }: InlineToolConstructorOptions) {
+  constructor({ api, config }: InlineToolConstructorOptions<LabelLinkConfig>) {
     this.api = api;
-
-    const configService = (config as LabelLinkConfig)?.dataHogService;
-    console.log(config, configService);
-    if (configService && typeof configService.searchLabels === 'function') {
-      console.log('Using config service');
-      LabelLinkTool.dataHogService = configService;
-    } else {
-      console.error('something went wrong with the service');
-    }
-
-    if (!LabelLinkTool.dataHogService) {
-      console.error(
-        'LabelLinkTool: dataHogService not provided. Call LabelLinkTool.configure() first.',
-      );
-    } else {
-      console.log(
-        'LabelLinkTool: dataHogService is set, searchLabels type:',
-        typeof LabelLinkTool.dataHogService.searchLabels,
-      );
-    }
-
+    this.dataHogService = config!.getDataHogService();
     // Setup keyboard listener for [[ trigger
     this.setupKeyboardListener();
   }
@@ -67,30 +44,44 @@ export default class LabelLinkTool implements InlineTool {
   }
 
   surround(range: Range): void {
-    if (!range) {
+    if (this.state) {
+      this.unwrap(range);
       return;
     }
 
-    const selectedText = range.toString();
-    const span = document.createElement(this.tag);
-    span.classList.add(this.class);
-    span.setAttribute('data-label', selectedText);
-    span.textContent = `[[${selectedText}]]`;
+    this.wrap(range);
+  }
 
-    range.deleteContents();
-    range.insertNode(span);
+  wrap(range: Range) {
+    const selectedText = range.extractContents();
+    const mark = document.createElement(this.tag);
 
-    this.api.selection.expandToTag(span);
+    mark.classList.add(this.class);
+    mark.setAttribute('data-label', selectedText.toString());
+    mark.textContent = `[[${selectedText.toString()}]]`;
+
+    mark.appendChild(selectedText);
+    // range.deleteContents();
+    range.insertNode(mark);
+
+    this.api.selection.expandToTag(mark);
+  }
+
+  unwrap(range: Range) {
+    const mark = this.api.selection.findParentTag(this.tag, this.class);
+    const text = range.extractContents();
+
+    mark?.remove();
+
+    range.insertNode(text);
+  }
+
+  get state(): boolean {
+    return this.api.selection.findParentTag(this.tag) !== null;
   }
 
   checkState(): boolean {
-    const selection = window.getSelection();
-    if (!selection || !selection.anchorNode) {
-      return false;
-    }
-
-    const element = selection.anchorNode.parentElement;
-    return !!element?.classList.contains(this.class);
+    return this.state;
   }
 
   static get sanitize() {
@@ -100,12 +91,6 @@ export default class LabelLinkTool implements InlineTool {
         'data-label': true,
       },
     };
-  }
-
-  private setupKeyboardListener(): void {
-    // We'll attach this to the editor on ready
-    document.addEventListener('keydown', this.handleKeyDown.bind(this));
-    document.addEventListener('input', this.handleInput.bind(this));
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
@@ -275,13 +260,8 @@ export default class LabelLinkTool implements InlineTool {
       window.clearTimeout(this.searchTimeout);
     }
 
-    if (!LabelLinkTool.dataHogService) {
-      console.error('LabelLinkTool: dataHogService is not initialized');
-      return;
-    }
-
     this.searchTimeout = window.setTimeout(async () => {
-      const labels = await LabelLinkTool.dataHogService.searchLabels(query);
+      const labels = await this.dataHogService.searchLabels(query);
       this.renderAutocomplete(labels);
     }, 150);
   }
@@ -479,5 +459,16 @@ export default class LabelLinkTool implements InlineTool {
 
   clear(): void {
     this.closeAutocomplete(true); // Clear everything
+  }
+
+  private setupKeyboardListener(): void {
+    if (LabelLinkTool.keyboardListened) {
+      return;
+    }
+    LabelLinkTool.keyboardListened = true;
+    console.log('setting up keyboard listener');
+    // We'll attach this to the editor on ready
+    document.addEventListener('keydown', this.handleKeyDown.bind(this));
+    document.addEventListener('input', this.handleInput.bind(this));
   }
 }

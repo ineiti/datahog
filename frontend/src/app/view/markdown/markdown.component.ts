@@ -35,6 +35,7 @@ export class MarkdownComponent implements OnInit, OnDestroy {
   }
 
   private getTextTools() {
+    console.log('getTextTools', this.dh);
     return {
       header: {
         class: Header as any,
@@ -55,7 +56,7 @@ export class MarkdownComponent implements OnInit, OnDestroy {
       labelLink: {
         class: LabelLinkTool,
         config: {
-          dataHogService: this.dh,
+          getDataHogService: () => this.dh,
         },
       },
     };
@@ -108,9 +109,6 @@ export class MarkdownComponent implements OnInit, OnDestroy {
     if (!this.node || !holder) {
       return;
     }
-
-    // Configure LabelLinkTool with DataHogService
-    LabelLinkTool.configure(this.dh);
 
     this.editor = await this.initializeEditor(
       holder,
