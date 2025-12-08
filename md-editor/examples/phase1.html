@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phase 1 - Core Infrastructure</title>
+  <link rel="stylesheet" href="./styles.css">
+  <style>
+    .editor-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 1rem;
+      min-height: 400px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Phase 1: Core Infrastructure</h1>
+    <p>Testing: Basic paragraph block with cursor tracking</p>
+  </div>
+
+  <div id="editor" class="editor-container"></div>
+
+  <div class="controls">
+    <button id="save">Save Markdown</button>
+    <button id="load">Load Sample</button>
+    <button id="clear">Clear</button>
+  </div>
+
+  <div class="output">
+    <h3>Current State:</h3>
+    <pre id="state-output">Ready to edit...</pre>
+  </div>
+
+  <script type="module">
+    import { MarkdownEditor } from '../dist/index.mjs';
+    import { ParagraphBlock } from '../dist/plugins/blocks/index.mjs';
+
+    // Initialize editor for this phase
+    const editor = new MarkdownEditor({
+      holder: document.getElementById('editor'),
+      tools: {
+        blocks: {
+          paragraph: { plugin: ParagraphBlock, inlineGroups: [] }
+        },
+        inlines: {},
+        inlineGroups: {}
+      },
+      data: 'This is a test paragraph.',
+      onChange: (api, event) => {
+        // Display change events
+        document.getElementById('state-output').textContent =
+          'Last change: ' + event.type + ' at ' + new Date(event.timestamp).toLocaleTimeString();
+      }
+    });
+
+    // Hook up controls
+    document.getElementById('save').onclick = async () => {
+      const markdown = await editor.save();
+      console.log('Saved markdown:', markdown);
+      document.getElementById('state-output').textContent =
+        'Saved Markdown:\n\n' + markdown;
+    };
+
+    document.getElementById('load').onclick = async () => {
+      await editor.load('Sample text for phase 1.\nThis is another paragraph.');
+      document.getElementById('state-output').textContent = 'Sample content loaded!';
+    };
+
+    document.getElementById('clear').onclick = () => {
+      editor.clear();
+      document.getElementById('state-output').textContent = 'Editor cleared!';
+    };
+  </script>
+</body>
+</html>
