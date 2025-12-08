@@ -1,4 +1,4 @@
-import { Block, BlockData } from '../types/Block.js';
+import { Block, BlockData } from "../types/Block.js";
 
 /**
  * BlockTree manages the hierarchical block structure
@@ -14,7 +14,11 @@ export class BlockTree {
   /**
    * Create a new block from data
    */
-  static createBlock(type: string, content: string = '', metadata: Record<string, any> = {}): Block {
+  static createBlock(
+    type: string,
+    content: string = "",
+    metadata: Record<string, any> = {},
+  ): Block {
     return {
       id: BlockTree.generateId(),
       type,
@@ -22,7 +26,7 @@ export class BlockTree {
       metadata,
       child: null,
       next: null,
-      isActive: false
+      isActive: false,
     };
   }
 
@@ -30,7 +34,11 @@ export class BlockTree {
    * Create a block tree from BlockData
    */
   static fromData(data: BlockData): Block {
-    const block = BlockTree.createBlock(data.type, data.content, data.metadata || {});
+    const block = BlockTree.createBlock(
+      data.type,
+      data.content,
+      data.metadata || {},
+    );
 
     if (data.child) {
       block.child = BlockTree.fromData(data.child);
@@ -50,7 +58,7 @@ export class BlockTree {
     const data: BlockData = {
       type: block.type,
       content: block.content,
-      metadata: block.metadata
+      metadata: block.metadata,
     };
 
     if (block.child) {
@@ -136,6 +144,9 @@ export class BlockTree {
     }
 
     // Recurse into child and next
-    return BlockTree.removeBlock(root.child, blockId) || BlockTree.removeBlock(root.next, blockId);
+    return (
+      BlockTree.removeBlock(root.child, blockId) ||
+      BlockTree.removeBlock(root.next, blockId)
+    );
   }
 }

@@ -25,7 +25,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup",
@@ -53,5 +54,5 @@
     "contenteditable"
   ],
   "author": "Datahog",
-  "license": "MIT"
+  "license": "MPL-2.0"
 }

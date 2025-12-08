@@ -6,5 +6,4 @@ export function callback_datahog(s: number) {
   console.log(s);
 }
 
-bootstrapApplication(App, appConfig)
-  .catch((err) => console.error(err));
+bootstrapApplication(App, appConfig).catch((err) => console.error(err));

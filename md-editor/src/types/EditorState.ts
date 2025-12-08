@@ -1,4 +1,4 @@
-import { Block, CursorPosition, SelectionRange } from './Block.js';
+import { Block, CursorPosition, SelectionRange } from "./Block.js";
 
 /**
  * HistoryEntry represents a state in the undo/redo history

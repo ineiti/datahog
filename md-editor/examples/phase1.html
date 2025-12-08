@@ -43,11 +43,7 @@
     const editor = new MarkdownEditor({
       holder: document.getElementById('editor'),
       tools: {
-        blocks: {
-          paragraph: { plugin: ParagraphBlock, inlineGroups: [] }
-        },
-        inlines: {},
-        inlineGroups: {}
+        blocks: [new ParagraphBlock()],
       },
       data: 'This is a test paragraph.',
       onChange: (api, event) => {

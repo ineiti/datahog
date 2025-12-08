@@ -1,4 +1,4 @@
-import { Block } from './Block.js';
+import { Block } from "./Block.js";
 
 /**
  * EditorAPI provides methods for interacting with the editor

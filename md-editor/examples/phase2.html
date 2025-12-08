@@ -27,7 +27,15 @@
                     Type <code>1. </code> at the start to create an ordered list
                 </li>
                 <li>
-                    Press <code>Enter</code> to create a new paragraph block
+                    Press <code>Tab</code> in a list item to indent (nest) it
+                </li>
+                <li>
+                    Press <code>Shift+Tab</code> in a list item to unindent it
+                </li>
+                <li>Press <code>Enter</code> to create a new block</li>
+                <li>
+                    Use <code>Arrow Up/Down</code> to navigate within
+                    soft-wrapped lines before moving between blocks
                 </li>
                 <li>
                     Click on any block to activate it and see the markdown
@@ -52,7 +60,7 @@
 
         <script type="module">
             // Import CSS file - vite will process this
-            import '../dist/md-editor.css';
+            import "../dist/md-editor.css";
 
             import { MarkdownEditor } from "../dist/index.mjs";
             import {
@@ -74,6 +82,8 @@ We now support multiple block types:
 - Headings (levels 1-6)
 - Paragraphs
 - Unordered lists
+  - With nested items
+  - At multiple levels
 - Ordered lists
 
 ### Auto-conversion
@@ -87,6 +97,28 @@ Type these markers at the start of a line:
 5. * also for unordered list
 6. 1. for ordered list
 
+#### Nested Lists
+
+You can use Tab to indent list items:
+
+- Top level item
+  - Nested item
+    - Deeply nested item
+  - Another nested item
+- Back to top level
+
+Ordered lists can be nested too:
+
+1. First step
+   1. Sub-step A
+   2. Sub-step B
+2. Second step
+   1. Sub-step A
+      1. Detailed instruction
+      2. Another detail
+   2. Sub-step B
+3. Third step
+
 #### Mixed Content
 
 You can mix different block types freely.
@@ -95,20 +127,33 @@ You can mix different block types freely.
 - Item 2
 - Item 3
 
-And continue with paragraphs.`;
+And continue with paragraphs.
+
+### Soft Wrap Navigation Testing
+
+This is a very long paragraph that will definitely wrap to multiple lines on most screen widths. The purpose of this paragraph is to test the soft wrap navigation feature where cursor up and down keys should first navigate within the wrapped lines before moving to the previous or next block. This allows for more natural editing of long text blocks without jumping between blocks prematurely. Try placing your cursor in the middle of this paragraph and using the arrow up and down keys to navigate through the wrapped lines.
+
+Long list items for testing:
+
+- This is an extremely long list item that contains a lot of text and will surely wrap to multiple lines on typical screen widths. When you use the arrow up and down keys within this list item, the cursor should move through the wrapped lines first before jumping to the previous or next list item. This makes editing long list items much more natural and intuitive.
+- Another long list item with substantial content that spans multiple visual lines. The soft wrap navigation feature should allow you to move the cursor up and down within this text block seamlessly, only moving to adjacent blocks when you reach the actual first or last visual line of the content.
+- Short item
+- Yet another very long list item to thoroughly test the navigation behavior. This one includes even more text to ensure that it wraps to at least three or four visual lines on most displays. The cursor navigation should feel smooth and natural as you move through each visual line within the block before transitioning to the next or previous block in the document structure.
+
+### More Test Cases
+
+A final long paragraph for comprehensive testing of the soft wrap navigation feature. This paragraph is intentionally verbose to ensure multiple line wraps occur naturally during the editing process. The implementation should handle all edge cases gracefully, including navigation at the very beginning and end of wrapped lines, as well as in the middle of long text spans. Feel free to edit this text and experiment with the arrow key navigation to verify that it behaves as expected.`;
 
             // Initialize editor for Phase 2
             const editor = new MarkdownEditor({
                 holder: document.getElementById("editor"),
                 tools: {
-                    blocks: {
-                        paragraph: { plugin: ParagraphBlock, inlineGroups: [] },
-                        heading: { plugin: HeadingBlock, inlineGroups: [] },
-                        ul: { plugin: UnorderedListBlock, inlineGroups: [] },
-                        ol: { plugin: OrderedListBlock, inlineGroups: [] },
-                    },
-                    inlines: {},
-                    inlineGroups: {},
+                    blocks: [
+                        new ParagraphBlock(),
+                        new HeadingBlock(),
+                        new UnorderedListBlock(),
+                        new OrderedListBlock(),
+                    ],
                 },
                 data: sampleMarkdown,
                 onChange: async (api, event) => {
@@ -129,7 +174,6 @@ And continue with paragraphs.`;
             document.getElementById("save").onclick = async () => {
                 const markdown = await editor.save();
                 console.log("Saved markdown:", markdown);
-                alert("Markdown saved to console!");
             };
 
             document.getElementById("load").onclick = async () => {

@@ -1,4 +1,4 @@
-import { Block, BlockData, CursorPosition } from './Block.js';
+import { Block, BlockData, CursorPosition } from "./Block.js";
 
 /**
  * BlockMatchResult is returned when text matches a block pattern
@@ -14,9 +14,9 @@ export interface BlockMatchResult {
  * BlockAction is returned from onKeyDown handlers
  */
 export interface BlockAction {
-  type: 'continue' | 'stop' | 'create' | 'convert' | 'delete';
+  type: "continue" | "stop" | "create" | "convert" | "delete";
   newBlock?: Block;
-  insertAs?: 'child' | 'next'; // Where to insert new block (default: 'next')
+  insertAs?: "child" | "next"; // Where to insert new block (default: 'next')
   convertTo?: string;
   preventDefault?: boolean;
 }
@@ -30,6 +30,9 @@ export interface BlockPlugin {
 
   // Display name for UI
   name: string;
+
+  // Inline groups supported by this block
+  inlineGroups?: string[];
 
   // Detect if text should convert to this block type
   // e.g., "# " at start → heading block
@@ -48,7 +51,11 @@ export interface BlockPlugin {
   renderActive(block: Block, cursorOffset: number): HTMLElement;
 
   // Handle keyboard input within this block
-  onKeyDown?(event: KeyboardEvent, block: Block, cursor: CursorPosition): BlockAction;
+  onKeyDown?(
+    event: KeyboardEvent,
+    block: Block,
+    cursor: CursorPosition,
+  ): BlockAction;
 
   // Handle block-level operations
   onCreate?(block: Block): void;
@@ -59,4 +66,24 @@ export interface BlockPlugin {
   // Metadata operations
   getMetadata?(block: Block): Record<string, any>;
   setMetadata?(block: Block, metadata: Record<string, any>): void;
+
+  // Content extraction and reconstruction
+  extractContent(block: Block): string; // Extract content without markdown syntax
+  getSyntaxLength(block: Block): number; // Get length of syntax prefix
+  reconstructContent(
+    cleanContent: string,
+    metadata: Record<string, any>,
+  ): string; // Reconstruct with syntax
+
+  // Save formatting
+  shouldAddEmptyLineBefore(previousBlockType: string | null): boolean; // Whether to add empty line before
+
+  // Cursor positioning
+  positionCursorAfterCreate(element: HTMLElement): void; // Position cursor after creating block
+
+  // Render optimization
+  // If true, the block will be re-rendered on every input event
+  // Use this for blocks with syntax spans that need updating (e.g., headings, lists)
+  // If false/undefined, the block will only re-render when its type changes
+  needsRerenderOnInput?: boolean;
 }

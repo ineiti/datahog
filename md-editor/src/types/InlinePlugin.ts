@@ -61,8 +61,8 @@ export interface InlinePlugin {
   // Auto-completion patterns for comfortable typing
   // When trigger character is typed, insert before/after cursor
   autoComplete?: Array<{
-    trigger: string;    // Character that triggers (e.g., "*" or "[")
-    before: string;     // Text to insert before cursor (e.g., "*")
-    after: string;      // Text to insert after cursor (e.g., "*")
+    trigger: string; // Character that triggers (e.g., "*" or "[")
+    before: string; // Text to insert before cursor (e.g., "*")
+    after: string; // Text to insert after cursor (e.g., "*")
   }>;
 }
