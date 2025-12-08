@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsup';
+import { copyFileSync } from 'fs';
 
 export default defineConfig({
   entry: {
@@ -13,5 +14,10 @@ export default defineConfig({
   splitting: false,
   treeshake: true,
   minify: false,
-  external: ['rxjs']
+  external: ['rxjs'],
+  onSuccess: async () => {
+    // Copy CSS file to dist for npm package distribution
+    copyFileSync('src/md-editor.css', 'dist/md-editor.css');
+    console.log('✓ Copied md-editor.css to dist/');
+  }
 });

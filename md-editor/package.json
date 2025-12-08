@@ -7,20 +7,21 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./plugins/blocks": {
+      "types": "./dist/plugins/blocks/index.d.ts",
       "import": "./dist/plugins/blocks/index.mjs",
-      "require": "./dist/plugins/blocks/index.js",
-      "types": "./dist/plugins/blocks/index.d.ts"
+      "require": "./dist/plugins/blocks/index.js"
     },
     "./plugins/inlines": {
+      "types": "./dist/plugins/inlines/index.d.ts",
       "import": "./dist/plugins/inlines/index.mjs",
-      "require": "./dist/plugins/inlines/index.js",
-      "types": "./dist/plugins/inlines/index.d.ts"
-    }
+      "require": "./dist/plugins/inlines/index.js"
+    },
+    "./md-editor.css": "./dist/md-editor.css"
   },
   "files": [
     "dist",
@@ -32,7 +33,7 @@
     "test": "vitest",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "examples": "vite examples --port 3000"
+    "examples": "vite"
   },
   "dependencies": {
     "rxjs": "^7.8.0"

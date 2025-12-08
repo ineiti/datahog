@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Phase 2 - Block System</title>
+        <link rel="stylesheet" href="./styles.css" />
+    </head>
+    <body>
+        <div class="header">
+            <h1>Phase 2: Block System</h1>
+            <p>Testing: Multiple block types with auto-conversion</p>
+        </div>
+
+        <div class="instructions">
+            <h3>Try these features:</h3>
+            <ul>
+                <li>
+                    Type <code># </code> at the start to create a heading (# to
+                    ######)
+                </li>
+                <li>
+                    Type <code>- </code> or <code>* </code> at the start to
+                    create an unordered list
+                </li>
+                <li>
+                    Type <code>1. </code> at the start to create an ordered list
+                </li>
+                <li>
+                    Press <code>Enter</code> to create a new paragraph block
+                </li>
+                <li>
+                    Click on any block to activate it and see the markdown
+                    syntax
+                </li>
+                <li>Click outside to deactivate and see the rendered HTML</li>
+            </ul>
+        </div>
+
+        <div id="editor" class="editor-container"></div>
+
+        <div class="controls">
+            <button id="save">Save (log to console)</button>
+            <button id="load">Load Sample</button>
+            <button id="clear">Clear</button>
+        </div>
+
+        <div class="output">
+            <h3>Saved Markdown:</h3>
+            <pre id="state-output"></pre>
+        </div>
+
+        <script type="module">
+            // Import CSS file - vite will process this
+            import '../dist/md-editor.css';
+
+            import { MarkdownEditor } from "../dist/index.mjs";
+            import {
+                ParagraphBlock,
+                HeadingBlock,
+                UnorderedListBlock,
+                OrderedListBlock,
+            } from "../dist/plugins/blocks/index.mjs";
+
+            // Sample markdown with different block types
+            const sampleMarkdown = `# Welcome to Phase 2
+
+This is a paragraph block.
+
+## Block Types
+
+We now support multiple block types:
+
+- Headings (levels 1-6)
+- Paragraphs
+- Unordered lists
+- Ordered lists
+
+### Auto-conversion
+
+Type these markers at the start of a line:
+
+1. # for heading level 1
+2. ## for heading level 2
+3. ### for heading level 3
+4. - for unordered list
+5. * also for unordered list
+6. 1. for ordered list
+
+#### Mixed Content
+
+You can mix different block types freely.
+
+- Item 1
+- Item 2
+- Item 3
+
+And continue with paragraphs.`;
+
+            // Initialize editor for Phase 2
+            const editor = new MarkdownEditor({
+                holder: document.getElementById("editor"),
+                tools: {
+                    blocks: {
+                        paragraph: { plugin: ParagraphBlock, inlineGroups: [] },
+                        heading: { plugin: HeadingBlock, inlineGroups: [] },
+                        ul: { plugin: UnorderedListBlock, inlineGroups: [] },
+                        ol: { plugin: OrderedListBlock, inlineGroups: [] },
+                    },
+                    inlines: {},
+                    inlineGroups: {},
+                },
+                data: sampleMarkdown,
+                onChange: async (api, event) => {
+                    // Auto-save and display current markdown
+                    const markdown = await api.save();
+                    document.getElementById("state-output").textContent =
+                        markdown;
+                },
+                onReady: async (api) => {
+                    // Display initial markdown
+                    const markdown = await api.save();
+                    document.getElementById("state-output").textContent =
+                        markdown;
+                },
+            });
+
+            // Hook up controls
+            document.getElementById("save").onclick = async () => {
+                const markdown = await editor.save();
+                console.log("Saved markdown:", markdown);
+                alert("Markdown saved to console!");
+            };
+
+            document.getElementById("load").onclick = async () => {
+                await editor.load(sampleMarkdown);
+            };
+
+            document.getElementById("clear").onclick = () => {
+                editor.clear();
+            };
+        </script>
+    </body>
+</html>

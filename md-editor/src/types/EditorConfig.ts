@@ -48,5 +48,5 @@ export interface EditorConfig {
 
   // Callbacks
   onChange?: (api: EditorAPI, event: ChangeEvent) => void;
-  onReady?: () => void;
+  onReady?: (api: EditorAPI) => void;
 }

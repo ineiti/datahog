@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MD-Editor Examples</title>
+  <link rel="stylesheet" href="./styles.css">
+  <style>
+    .examples-list {
+      max-width: 800px;
+      margin: 2rem auto;
+    }
+
+    .example-card {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: box-shadow 0.2s;
+    }
+
+    .example-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .example-card h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .example-card p {
+      color: #666;
+      margin-bottom: 1rem;
+    }
+
+    .example-card a {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .example-card a:hover {
+      background: #0056b3;
+    }
+
+    .features {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+    }
+
+    .features li {
+      padding: 0.25rem 0;
+      color: #555;
+    }
+
+    .features li:before {
+      content: "✓ ";
+      color: #28a745;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>MD-Editor Examples</h1>
+    <p>Explore the block-based markdown editor with mixed display mode</p>
+  </div>
+
+  <div class="examples-list">
+    <div class="example-card">
+      <h2>Phase 1: Core Infrastructure</h2>
+      <p>Basic paragraph block with cursor tracking and state management.</p>
+      <ul class="features">
+        <li>RxJS-based state management</li>
+        <li>Basic paragraph block implementation</li>
+        <li>Cursor position tracking</li>
+        <li>Save/Load functionality</li>
+      </ul>
+      <a href="./phase1.html">View Phase 1 Demo</a>
+    </div>
+
+    <div class="example-card">
+      <h2>Phase 2: Block System</h2>
+      <p>Multiple block types with auto-conversion and mixed display mode.</p>
+      <ul class="features">
+        <li>Multiple block types (headings, lists, paragraphs)</li>
+        <li>Auto-conversion from markdown syntax</li>
+        <li>Mixed display mode (Obsidian-style)</li>
+        <li>Block activation and deactivation</li>
+        <li>Enter key for new blocks</li>
+      </ul>
+      <a href="./phase2.html">View Phase 2 Demo</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,105 @@
+/* MD-Editor Core Styles */
+
+.md-editor {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  min-height: 300px;
+  outline: none;
+}
+
+/* Block Styles */
+.md-block {
+  margin: 0.5rem 0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  transition: background-color 0.15s;
+  outline: none;
+}
+
+.md-block:hover {
+  background-color: #f9f9f9;
+}
+
+.md-block.active {
+  background-color: #f0f7ff;
+  outline: 1px solid #4a9eff;
+  position: relative;
+}
+
+/* Paragraph Styles */
+.md-paragraph {
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 1.6em;
+}
+
+.md-paragraph:empty::before {
+  content: 'Type something...';
+  color: #999;
+  font-style: italic;
+}
+
+/* Heading Styles */
+.md-heading {
+  font-weight: bold;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+h1.md-heading {
+  font-size: 2em;
+}
+
+h2.md-heading {
+  font-size: 1.75em;
+}
+
+h3.md-heading {
+  font-size: 1.5em;
+}
+
+h4.md-heading {
+  font-size: 1.25em;
+}
+
+h5.md-heading {
+  font-size: 1.1em;
+}
+
+h6.md-heading {
+  font-size: 1em;
+}
+
+/* List Styles */
+.md-list-item {
+  list-style-type: disc;
+  margin-left: 1.5rem;
+}
+
+/* Override .md-block margins for list items to make them closer together */
+.md-block.md-list-item {
+  margin-top: 0.125rem;
+  margin-bottom: 0.125rem;
+  line-height: 1;
+}
+
+.md-list-item.md-ordered {
+  list-style-type: decimal;
+}
+
+/* Block Children (nested elements) */
+.md-block-children {
+  padding-left: 1.5rem;
+}
+
+/* Markdown Syntax Display */
+.md-syntax {
+  color: #999;
+  font-weight: normal;
+  user-select: none;
+}
+
+.md-content {
+  color: inherit;
+}

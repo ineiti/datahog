@@ -37,48 +37,10 @@ body {
   max-width: 800px;
   margin: 2rem auto;
   border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1.5rem;
-  min-height: 400px;
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Editor Styles */
-.md-editor {
-  min-height: 300px;
-  outline: none;
-}
-
-.md-block {
-  margin: 0.5rem 0;
-  outline: none;
-}
-
-.md-paragraph {
-  line-height: 1.6;
-  min-height: 1.6em;
-}
-
-.md-paragraph:empty::before {
-  content: 'Type something...';
-  color: #999;
-  font-style: italic;
-}
-
-.md-paragraph.active {
-  background-color: #f9f9f9;
-  padding: 0.25rem;
   border-radius: 4px;
-}
-
-.md-block-children {
-  padding-left: 1.5rem;
-}
-
-.md-syntax {
-  color: #999;
-  user-select: none;
+  padding: 1rem;
+  min-height: 400px;
+  background: white;
 }
 
 /* Controls */
@@ -91,46 +53,64 @@ body {
 
 .controls button {
   padding: 0.5rem 1rem;
-  background-color: #2196F3;
+  background: #4a9eff;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
+  font-size: 14px;
 }
 
 .controls button:hover {
-  background-color: #1976D2;
-}
-
-.controls button:active {
-  transform: translateY(1px);
+  background: #3a8eef;
 }
 
 /* Output Display */
 .output {
   max-width: 800px;
-  margin: 2rem auto;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1.5rem;
+  margin: 1rem auto;
+  padding: 1rem;
+  background: #f5f5f5;
+  border-radius: 4px;
 }
 
 .output h3 {
   margin-top: 0;
-  color: #555;
-  font-size: 1.1rem;
+  font-size: 18px;
 }
 
 .output pre {
-  background-color: #f5f5f5;
+  background: white;
   padding: 1rem;
   border-radius: 4px;
   overflow-x: auto;
-  font-size: 0.85rem;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Instructions */
+.instructions {
+  max-width: 800px;
+  margin: 1rem auto;
+  padding: 1rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.instructions h3 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.instructions ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.instructions li {
+  margin: 0.25rem 0;
 }
 
 /* Utility Classes */
